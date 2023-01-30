@@ -2,12 +2,8 @@ rm(list=ls())
 library(treatppmx)
 set.seed(121)
 ### ----
-# This script is used to generate all the scenarios
+# This script is used to generate all the scenarios for the main simulation study
 ###
-
-# Scenario 1
-treatppmx::genmech(npred = 10, progscen = 2, predscen = 1, nset = 50, save = T, 
-                   filename = "scenario1")
 
 # Simulation Study - paper
 # Scenario 1a

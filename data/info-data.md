@@ -1,8 +1,5 @@
 # info-data
 
-## Sensitivity Study
-- 2 prognostic and 25 predictive markers. `scenario1.rda`
-
 ## Scenarios - Train-Test 
 ### overlap = 1.0
 1. 2 prognostic and 25 predictive markers. 
