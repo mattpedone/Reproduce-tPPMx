@@ -13,8 +13,6 @@ library(plotly)
 library(dplyr)
 
 load("data/LGGdata.rda")
-#name <- c("v01")
-load("/home/matt/Dropbox/PHD/study-treatppmx/output/lgg_analysis_24gen_noHS.RData")
 matchRTComp <- matchRTComp[sample(1:nrow(matchRTComp), size = nrow(matchRTComp), replace = F),]
 trtsgn <- c(matchRTComp[,10]) + 1
 #trtsgn <- ifelse(trtsgn == 1, 2, 1)
@@ -29,7 +27,7 @@ gof_all <- matrix(0, nrow = K, ncol = 2)
 
 wk <- c(0, 40, 100)
 
-registerDoParallel(cores = 5)#alloco solo core necessari
+registerDoParallel(cores = 10)#alloco solo core necessari
 
 Y <- matrix(0, nrow = npat, ncol = max(as.numeric(matchRTComp[,9])))
 for(i in 1:nrow(Y)){
@@ -39,7 +37,7 @@ for(i in 1:nrow(Y)){
 table(matchRTComp[,9:10])
 vectf <- c(1, 17, 33, 49, 65, 81, 97, 113, 129, 145, 159)
 #load("/home/matt/Dropbox/PHD/study-treatppmx/output/lgg12aprs121.RData")
-nout <- 1600
+nout <- 16000
 X <- scale(matchRTComp[,16:38])
 Z <- scale(matchRTComp[,c(11,13)])
 
@@ -49,40 +47,42 @@ myres0 <- foreach(k = 1:10) %dorng%
     X_train <- data.frame(X[-currfold,])
     Z_train <- data.frame(Z[-currfold,])
     Y_train <- data.frame(Y[-currfold,])
-    
+
     X_test <- data.frame(X[currfold,])
     Z_test <- data.frame(Z[currfold,])
     Y_test <- data.frame(Y[currfold,])
-    
+
     trtsgn_train <- trtsgn[-currfold]
     trtsgn_test <- trtsgn[currfold]
-    
+
     modelpriors <- list()
     modelpriors$hP0_m0 <- rep(0, ncol(Y_train)); modelpriors$hP0_nu0 <- 1
     modelpriors$hP0_s0 <- ncol(Y_train) + 2; modelpriors$hP0_Lambda0 <- 1
-    
+
     #n_aux <- 5 # auxiliary variable for Neal's Algorithm 8
     vec_par <- c(0.0, 1.0, .5, 1.0, 2.0, 2.0, 0.1)
     #double m0=0.0, s20=10.0, v=.5, k0=1.0, nu0=2.0, n0 = 2.0;
-    iterations <- 12000
-    burnin <- 4000
+    iterations <- 120000
+    burnin <- 40000
     thinning <- 5
-    
+
     nout <- (iterations-burnin)/thinning
     predAPT <- c()
-    
-    res0 <- tryCatch(expr = ppmxct(y = data.matrix(Y_train), X = data.frame(X_train), 
-                                   Xpred = data.frame(X_test), Z = data.frame(Z_train), 
+
+    res0 <- tryCatch(expr = ppmxct(y = data.matrix(Y_train), X = data.frame(X_train),
+                                   Xpred = data.frame(X_test), Z = data.frame(Z_train),
                                    Zpred = data.frame(Z_test), asstreat = trtsgn_train, #treatment,
                                    PPMx = 1, cohesion = 2, kappa = c(.1, 20, 5, 2.5), sigma = c(0.01, .5, 6),
-                                   similarity = 2, consim = 2, similparam = vec_par, 
-                                   calibration = 2, coardegree = 2, modelpriors, 
+                                   similarity = 2, consim = 2, similparam = vec_par,
+                                   calibration = 2, coardegree = 2, modelpriors,
                                    update_hierarchy = T,
-                                   hsp = F, iter = iterations, burn = burnin, thin = thinning, 
-                                   mhtunepar = c(0.05, 0.05), CC = 3, reuse = 1, 
+                                   hsp = F, iter = iterations, burn = burnin, thin = thinning,
+                                   mhtunepar = c(0.05, 0.05), CC = 3, reuse = 1,
                                    nclu_init = 10), error = function(e){FALSE})
     return(res0)
   }
+
+#save(myres0, file = "output/lgg_analysis_24gen_noHS_k20.RData")
 
 for(k in 1:K){
   currfold <- (vectf[k]:(vectf[k+1]-1))
@@ -91,34 +91,34 @@ for(k in 1:K){
   mc <- apply(res0$nclu, 1, mean)
   trt <- trtsgn[-currfold]#simdata$trtsgn[[k]][1:124]
   num_treat <- table(trt)
-  
+
   cls1 <- t(as.matrix(res0$label[[1]]))[,c(1:num_treat[1])]
   psm1 <- comp.psm(cls1)
   mc_b1 <- minbinder.ext(psm1)
   mc_vi1 <- minVI(psm1)
-  
+
   cls2 <- t(as.matrix(res0$label[[2]]))[,c(1:num_treat[2])]
   psm2 <- comp.psm(cls2)
   mc_b2 <- minbinder.ext(psm2)
   mc_vi2 <- minVI(psm2)
-  
+
   mc_b <- c(max(mc_b1$cl), max(mc_b2$cl))
   mc_vi <- c(max(mc_vi1$cl), max(mc_vi2$cl))
-  
+
   myres <- apply(res0$pipred, c(1,2,3), median, na.rm=TRUE)
   myclu <- rbind(mc, mc_b, mc_vi)
   myfit <- c(res0$WAIC, mean(res0$lpml))
-  A1 <- myres[,, 1]%*%wk 
+  A1 <- myres[,, 1]%*%wk
   A2 <- myres[,, 2]%*%wk
   predAPT_all[currfold, 1] <- A1
   predAPT_all[currfold, 2] <- A2
   myt <- as.numeric(A1 < A2) + 1
   predAPT_all[currfold, 3] <- myt
   predAPT_all[currfold, 4:9] <- cbind(myres[,, 1], myres[,, 2])
-  
+
   nclust_all[k,] <- c(t(myclu))
   gof_all[k,] <- myfit
-  
+
   #myprob <- simdata$prob[[k]]
 }
 
@@ -200,7 +200,6 @@ clu <- rbind(clu, apply(cluPPMX, 2, sd))
 colnames(clu) <- c("avg # trt 1", "avg # trt 2", "VI trt 1", "VI trt 2")
 NPC; ESM; resPPMX; clu
 
-#save(myres0, file = "output/lgg_analysis_24gen_noHS_k20.RData")
 k <- 2
 out_ppmx <- myres0[[k]]
 
@@ -245,7 +244,7 @@ data <- data[,reord]
 coincidences<-sapply(1:ncol(data), function(i){ colSums(data[,i]==data) })
 mC <- melt(coincidences)
 c1 <- ggplot(mC, aes(Var1,Var2, fill=value/nout)) + geom_raster() +
-  scale_fill_continuous(type = "viridis") + 
+  scale_fill_continuous(type = "viridis") +
   theme_classic() +
   xlab("Patients") + ylab("Patients") + ggtitle("Treatment 1")
 
@@ -255,7 +254,7 @@ data <- t(out_ppmx$label[[2]])
 data <- data[,reord2]
 coincidences<-sapply(1:ncol(data), function(i){ colSums(data[,i]==data) })
 c2 <- ggplot(melt(coincidences), aes(Var1,Var2, fill=value/nout)) + geom_raster() +
-  scale_fill_continuous(type = "viridis") + 
+  scale_fill_continuous(type = "viridis") +
   theme_classic() +
   xlab("Patients") + ylab("Patients") + ggtitle("Treatment 2")
 
@@ -270,7 +269,7 @@ data <- data[,reordb]
 coincidences<-sapply(1:ncol(data), function(i){ colSums(data[,i]==data) })
 mC <- melt(coincidences)
 c1 <- ggplot(mC, aes(Var1,Var2, fill=value/nout)) + geom_raster() +
-  scale_fill_continuous(type = "viridis") + 
+  scale_fill_continuous(type = "viridis") +
   xlab("patients") + ylab("patients") + ggtitle("Treatment 1")
 
 cp1b <- c1 + labs(fill = "Correlation")
@@ -279,7 +278,7 @@ data <- t(out_ppmx$label[[2]])
 data <- data[,reord2b]
 coincidences<-sapply(1:ncol(data), function(i){ colSums(data[,i]==data) })
 c2 <- ggplot(melt(coincidences), aes(Var1,Var2, fill=value/nout)) + geom_raster() +
-  scale_fill_continuous(type = "viridis") + 
+  scale_fill_continuous(type = "viridis") +
   xlab("patients") + ylab("patients") + ggtitle("Treatment 2")
 
 cp2b <- c2 + labs(fill = "Correlation")
@@ -304,9 +303,9 @@ colnames(df) <- c("treatment 1", "treatment 2")
 df <- cbind(Index = as.numeric(row.names(df)), df)
 df <- reshape2::melt(df, id.vars="Index")
 colnames(df) <- c("Index", "Treatment", "value")
-clu_tp <- ggplot2::ggplot(df, aes(x = Index, y = value, col = Treatment)) + 
-  geom_line() + theme_classic() + 
-  xlab("Iterations") + ylab("# of clusters") 
+clu_tp <- ggplot2::ggplot(df, aes(x = Index, y = value, col = Treatment)) +
+  geom_line() + theme_classic() +
+  xlab("Iterations") + ylab("# of clusters")
 
 #ggsave(clu_tp, device = "pdf", path = "figs", filename = "clu_trplot.pdf")
 
@@ -370,29 +369,29 @@ xtable::xtable(tab, digits = 4)
 
 df_sigma <- data.frame(table(out_ppmx$sigmangg[1,]))
 colnames(df_sigma) <- c("sigma", "frequency")
-ms1 <- ggplot(df_sigma, aes(x=sigma, y=frequency)) + 
-  geom_segment(aes(x=sigma, xend=sigma, y=0, yend=frequency/nout)) + 
+ms1 <- ggplot(df_sigma, aes(x=sigma, y=frequency)) +
+  geom_segment(aes(x=sigma, xend=sigma, y=0, yend=frequency/nout)) +
   ylab("proportion") + xlab(expression(sigma))
 df_sigma <- data.frame(table(out_ppmx$sigmangg[2,]))
 colnames(df_sigma) <- c("sigma", "frequency")
-ms2 <- ggplot(df_sigma, aes(x=sigma, y=frequency)) + 
-  geom_segment(aes(x=sigma, xend=sigma, y=0, yend=frequency/nout))+ 
+ms2 <- ggplot(df_sigma, aes(x=sigma, y=frequency)) +
+  geom_segment(aes(x=sigma, xend=sigma, y=0, yend=frequency/nout))+
   ylab("proportion")+ xlab(expression(sigma))
 
 df_kappa <- data.frame(table(out_ppmx$kappangg[1,]))
-colnames(df_kappa) <- c("kappa", "frequency") 
-mk1 <- ggplot(df_kappa, aes(x=kappa, y=frequency)) + 
-  geom_segment(aes(x=kappa, xend=kappa, y=0, yend=frequency/nout)) + 
+colnames(df_kappa) <- c("kappa", "frequency")
+mk1 <- ggplot(df_kappa, aes(x=kappa, y=frequency)) +
+  geom_segment(aes(x=kappa, xend=kappa, y=0, yend=frequency/nout)) +
   ylab("proportion")+ xlab(expression(kappa))
 df_kappa <- data.frame(table(out_ppmx$kappangg[2,]))
 colnames(df_kappa) <- c("kappa", "frequency")
-mk2 <- ggplot(df_kappa, aes(x=kappa, y=frequency)) + 
-  geom_segment(aes(x=kappa, xend=kappa, y=0, yend=frequency/nout)) + 
+mk2 <- ggplot(df_kappa, aes(x=kappa, y=frequency)) +
+  geom_segment(aes(x=kappa, xend=kappa, y=0, yend=frequency/nout)) +
   ylab("proportion")+ xlab(expression(kappa))
 
 ksp <- ggpubr::ggarrange(mk1, mk2, ms1, ms2, nrow=2, ncol = 2)
 
-#dev.print(pdf, "figs/marg_kappa.pdf") 
+#dev.print(pdf, "figs/marg_kappa.pdf")
 
 #plot(out_ppmx$kappangg[1,], type ="l")
 #plot(out_ppmx$kappangg[2,], type ="l")
@@ -405,8 +404,8 @@ ksp <- ggpubr::ggarrange(mk1, mk2, ms1, ms2, nrow=2, ncol = 2)
 #h3d1 <- ggplot2::ggplot(Pm, aes(sigma, kappa, fill=freq)) + geom_tile() +
 #  ggplot2::geom_text(aes(label=freq),colour="white") + labs(fill = "Frequency")
 #Frequency <- tapply(Pm$freq, list(Pm$sigma, Pm$kappa), sum)
-#plot_ly(y = c(0.1, 0.2, 0.3, 0.4, 0.5), 
-#        x = c(0.1, 2.6, 5.0, 7.5, 10.0), z = ~ Frequency) %>% add_surface 
+#plot_ly(y = c(0.1, 0.2, 0.3, 0.4, 0.5),
+#        x = c(0.1, 2.6, 5.0, 7.5, 10.0), z = ~ Frequency) %>% add_surface
 #
 #P <- table(out_ppmx$sigmangg[2,], out_ppmx$kappangg[2,])
 #Pm <- reshape::melt(P) %>%
@@ -414,8 +413,8 @@ ksp <- ggpubr::ggarrange(mk1, mk2, ms1, ms2, nrow=2, ncol = 2)
 #h3d2 <- ggplot2::ggplot(Pm, aes(sigma, kappa, fill=freq)) + geom_tile() +
 #  ggplot2::geom_text(aes(label=freq),colour="white") + labs(fill = "Frequency")
 #Frequency <- tapply(Pm$freq, list(Pm$sigma, Pm$kappa), sum)
-#plot_ly(y = c(0.1, 0.2, 0.3, 0.4, 0.5), 
-#        x = c(0.1, 2.6, 5.0, 7.5, 10.0), z = ~ Frequency) %>% add_surface 
+#plot_ly(y = c(0.1, 0.2, 0.3, 0.4, 0.5),
+#        x = c(0.1, 2.6, 5.0, 7.5, 10.0), z = ~ Frequency) %>% add_surface
 #
 #h3dsk <- ggpubr::ggarrange(h3d1, h3d2, nrow=1, ncol = 2, common.legend = TRUE, legend="bottom")#, panel.border = element_blank())
 #h3dsk
@@ -429,16 +428,16 @@ colnames(df) <- c("beta")
 df <- cbind(Index = as.numeric(row.names(df)), df)
 df <- reshape2::melt(df, id.vars="Index")
 colnames(df) <- c("Index", "beta", "value")
-tp <- ggplot2::ggplot(df, aes(x = Index, y = value)) + 
-  geom_line() + theme_classic() + 
-  xlab("Iterations") + ylab("beta") 
+tp <- ggplot2::ggplot(df, aes(x = Index, y = value)) +
+  geom_line() + theme_classic() +
+  xlab("Iterations") + ylab("beta")
 
-den <- ggplot(df, aes(x=value)) + geom_density() +  
-  geom_vline(aes(xintercept = quantile(value, probs = .025)), color="blue", 
-             linetype="dashed", size=.25) + 
-  geom_vline(aes(xintercept = quantile(value, probs = .975)), color="blue", 
-             linetype="dashed", size=.25) + 
-  geom_vline(aes(xintercept = 0), color="red", linetype="dashed", size=.25) + 
+den <- ggplot(df, aes(x=value)) + geom_density() +
+  geom_vline(aes(xintercept = quantile(value, probs = .025)), color="blue",
+             linetype="dashed", size=.25) +
+  geom_vline(aes(xintercept = quantile(value, probs = .975)), color="blue",
+             linetype="dashed", size=.25) +
+  geom_vline(aes(xintercept = 0), color="red", linetype="dashed", size=.25) +
   xlab("beta")
 
 p <- ggpubr::ggarrange(tp, den, nrow = 1, ncol = 2)
@@ -452,7 +451,7 @@ b21 <- myplot(data.frame(out_ppmx$beta[2,1,]))
 b22 <- myplot(data.frame(out_ppmx$beta[2,2,]))
 b23 <- myplot(data.frame(out_ppmx$beta[2,3,]))
 
-progn <- ggpubr::ggarrange(b11, b12, b13, b21, b22, b23, nrow=2, ncol = 3, 
+progn <- ggpubr::ggarrange(b11, b12, b13, b21, b22, b23, nrow=2, ncol = 3,
                            common.legend = TRUE, legend="bottom")#, panel.border = element_blank())
 
 #ggsave(progn, device = "pdf", path = "figs", filename = "progn_plot.pdf")
@@ -491,14 +490,14 @@ colnames(df) <- c("treatment 1", "treatment 2")
 df <- cbind(Index = as.numeric(row.names(df)), df)
 df <- reshape2::melt(df, id.vars="Index")
 colnames(df) <- c("Index", "Treatment", "value")
-pat <- ggplot2::ggplot(df, aes(x = value, col = Treatment)) + 
-  geom_histogram(alpha = 0.5, position = "identity", binwidth = 10) + theme_classic() + 
+pat <- ggplot2::ggplot(df, aes(x = value, col = Treatment)) +
+  geom_histogram(alpha = 0.5, position = "identity", binwidth = 10) + theme_classic() +
   xlab("Predicted Utility") + ylab("") + ggtitle(paste0("Patient", pt))
 assign(paste("pt", pt, sep=""),pat)
 }
 
 ut <- ggpubr::ggarrange(pt1, pt2, pt3, pt4, pt5, pt6, pt7, pt8, pt9, pt10, pt11,
-                        pt12, pt13, pt14, pt15, pt16, nrow=4, ncol = 4, 
+                        pt12, pt13, pt14, pt15, pt16, nrow=4, ncol = 4,
                         common.legend = TRUE, legend="bottom")#, panel.border = element_blank())
 ut
 #ggsave(ut, device = "pdf", path = "figs", filename = "predut_plot.pdf")
@@ -591,14 +590,14 @@ for(k in 1:10){
   df <- cbind(Index = as.numeric(row.names(df)), df)
   df <- reshape2::melt(df, id.vars="Index")
   colnames(df) <- c("Index", "Treatment", "value")
-  clu_tp <- ggplot2::ggplot(df, aes(x = Index, y = value, col = Treatment)) + 
+  clu_tp <- ggplot2::ggplot(df, aes(x = Index, y = value, col = Treatment)) +
     geom_line() + theme_classic() + ggtitle(paste0("Fold ", k)) +
     xlab("Iterations") + ylab("# of clusters") + ylim(0, 16)
   assign(paste("clu_tp", k, sep=""), clu_tp)
 }
 
-pnc <- ggpubr::ggarrange(clu_tp1, clu_tp2, clu_tp3, clu_tp4, clu_tp5, clu_tp6, 
-                  clu_tp7, clu_tp8, clu_tp9, clu_tp10, ncol = 2, nrow=5, 
+pnc <- ggpubr::ggarrange(clu_tp1, clu_tp2, clu_tp3, clu_tp4, clu_tp5, clu_tp6,
+                  clu_tp7, clu_tp8, clu_tp9, clu_tp10, ncol = 2, nrow=5,
                   common.legend = TRUE, legend="bottom")
 #ggsave(pnc, device = "pdf", path = "figs", filename = "nc_plot.pdf")
 
@@ -621,56 +620,56 @@ lpml[[k]] <- coda::mcmc(matrix(vec, nrow = nout, ncol=1))
 
 for(k in 1:10){
   df <- ggmcmc::ggs(lpml[[k]])
-  pl <- ggplot2::ggplot(df, aes(x = Iteration, y = value)) + 
+  pl <- ggplot2::ggplot(df, aes(x = Iteration, y = value)) +
   geom_line() + theme_classic() + ggtitle(paste0("Fold ", k)) +
-  xlab("Iterations") + ylab("lpml") + ylim(c(-250, -170)) 
+  xlab("Iterations") + ylab("lpml") + ylim(c(-250, -170))
 assign(paste("c", k, sep=""), pl)
 }
 
-plpml <- ggpubr::ggarrange(c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, ncol = 2, nrow=5, 
+plpml <- ggpubr::ggarrange(c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, ncol = 2, nrow=5,
                   common.legend = TRUE, legend="bottom")
 #ggsave(plpml, device = "pdf", path = "figs", filename = "lpml_plot.pdf")
 
 for(k in 1:10){
   #k=4
   out_ppmx <- myres0[[k]]
-  
-  df_sigma <- rbind(data.frame(table(round(out_ppmx$sigmangg[1,],1))), 
+
+  df_sigma <- rbind(data.frame(table(round(out_ppmx$sigmangg[1,],1))),
                     data.frame(table(round(out_ppmx$sigmangg[2,],1))))
   vec <- c(rep("Treatment 1", dim(table(out_ppmx$sigmangg[1,]))), rep("Treatment 2", dim(table(out_ppmx$sigmangg[2,]))))
   df_sigma <- cbind(df_sigma, Treatment = as.factor(vec))
   df <- df_sigma %>%
-    group_by(Treatment) 
+    group_by(Treatment)
   colnames(df) <- c("sigma", "frequency", "Treatment")
-  
-  sigma <- ggplot(df, aes(x=sigma, y=frequency/nout, fill = Treatment)) + 
-    geom_bar(stat = "identity", position = "dodge", width = 0.1) + 
-    ylab("proportion") + xlab(expression(sigma)) + ggtitle(paste0("Fold ", k)) + 
+
+  sigma <- ggplot(df, aes(x=sigma, y=frequency/nout, fill = Treatment)) +
+    geom_bar(stat = "identity", position = "dodge", width = 0.1) +
+    ylab("proportion") + xlab(expression(sigma)) + ggtitle(paste0("Fold ", k)) +
     ylim(0, 0.75)
   assign(paste("sp", k, sep=""), sigma)
-  
-  df_kappa <- rbind(data.frame(table(round(out_ppmx$kappangg[1,],1))), 
+
+  df_kappa <- rbind(data.frame(table(round(out_ppmx$kappangg[1,],1))),
                     data.frame(table(round(out_ppmx$kappangg[2,],1))))
   vec <- c(rep("Treatment 1", dim(table(out_ppmx$kappangg[1,]))), rep("Treatment 2", dim(table(out_ppmx$kappangg[2,]))))
   df_kappa <- cbind(df_kappa, Treatment = as.factor(vec))
   df <- df_kappa %>%
-    group_by(Treatment) 
+    group_by(Treatment)
   colnames(df) <- c("kappa", "frequency", "Treatment")
-  
-  kappa <- ggplot(df, aes(x=kappa, y=frequency/nout, fill = Treatment)) + 
-    geom_bar(stat = "identity", position = "dodge", width = 0.1) + 
-    ylab("proportion") + xlab(expression(kappa)) + ggtitle(paste0("Fold ", k)) + 
+
+  kappa <- ggplot(df, aes(x=kappa, y=frequency/nout, fill = Treatment)) +
+    geom_bar(stat = "identity", position = "dodge", width = 0.1) +
+    ylab("proportion") + xlab(expression(kappa)) + ggtitle(paste0("Fold ", k)) +
     ylim(0, 0.75)
   assign(paste("kp", k, sep=""), kappa)
-  #ksp <- ggpubr::ggarrange(sigma, kappa, nrow=1, ncol = 2, legend = "none" )#, 
+  #ksp <- ggpubr::ggarrange(sigma, kappa, nrow=1, ncol = 2, legend = "none" )#,
   #                        #common.legend = TRUE, legend="bottom")
   #ksp <- ggpubr::annotate_figure(ksp, top = ggpubr::text_grob(paste("Fold ", k)))
   #assign(paste("ksp", k, sep=""), ksp)
 }
 
 
-pks <- ggpubr::ggarrange(sp1, kp1, sp2, kp2, sp3, kp3, sp4, kp4, sp5, kp5, sp6, kp6, 
+pks <- ggpubr::ggarrange(sp1, kp1, sp2, kp2, sp3, kp3, sp4, kp4, sp5, kp5, sp6, kp6,
                   sp7, kp7, sp8, kp8, sp9, kp9, sp10, kp10,
-                  ncol = 4, nrow=5, 
+                  ncol = 4, nrow=5,
                   common.legend = TRUE, legend="bottom")
 #ggsave(pks, device = "pdf", path = "figs", filename = "ks_plot.pdf")
