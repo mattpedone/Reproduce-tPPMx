@@ -56,14 +56,14 @@ myres0 <- foreach(k = 1:10) %dorng%
     trtsgn_test <- trtsgn[currfold]
 
     modelpriors <- list()
-    modelpriors$hP0_m0 <- rep(0, ncol(Y_train)); modelpriors$hP0_nu0 <- .1
+    modelpriors$hP0_m0 <- rep(0, ncol(Y_train)); modelpriors$hP0_nu0 <- 1
     modelpriors$hP0_s0 <- ncol(Y_train) + 2; modelpriors$hP0_Lambda0 <- 1
 
     #n_aux <- 5 # auxiliary variable for Neal's Algorithm 8
     vec_par <- c(0.0, 1.0, .5, 1.0, 2.0, 2.0, 0.1)
     #double m0=0.0, s20=10.0, v=.5, k0=1.0, nu0=2.0, n0 = 2.0;
-    iterations <- 120000
-    burnin <- 40000
+    iterations <- 12000
+    burnin <- 4000
     thinning <- 5
 
     nout <- (iterations-burnin)/thinning
@@ -199,6 +199,7 @@ clu <- apply(cluPPMX, 2, mean)
 clu <- rbind(clu, apply(cluPPMX, 2, sd))
 colnames(clu) <- c("avg # trt 1", "avg # trt 2", "VI trt 1", "VI trt 2")
 
+pred_meas <- c(NPC, ESM)
 save(pred_meas, file = "output/lgg-da/pred_meas_lgg.RData")
 save(resPPMX, file = "output/lgg-da/resPPMX_lgg.RData")
 save(clu, file = "output/lgg-da/clu_lgg.RData")
