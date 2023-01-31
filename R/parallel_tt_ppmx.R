@@ -41,7 +41,7 @@ npc2 <- function(output, trtsgn, myoutot){
   return(res)
 }
 
-K <- 50#repliche
+K <- 5#repliche
 npat_pred <- 28
 
 predAPT_all <- array(0, dim = c(npat_pred, 9, K))
@@ -67,13 +67,13 @@ myres0 <- foreach(k = 1:K) %dorng%
     trtsgn_test <- simdata$trtsgn[[k]][125:152]
 
     modelpriors <- list()
-    modelpriors$hP0_m0 <- rep(0, ncol(Y_train)); modelpriors$hP0_nu0 <- .1
-    modelpriors$hP0_s0 <- ncol(Y_train) + 2; modelpriors$hP0_Lambda0 <- .1
+    modelpriors$hP0_m0 <- rep(0, ncol(Y_train)); modelpriors$hP0_nu0 <- 10
+    modelpriors$hP0_s0 <- ncol(Y_train) + 2; modelpriors$hP0_Lambda0 <- 1
 
     vec_par <- c(0.0, 1.0, .5, 1.0, 2.0, 2.0, 0.1)
     #double m0=0.0, s20=10.0, v=.5, k0=1.0, nu0=2.0, n0 = 2.0;
-    iterations <- 12000
-    burnin <- 2000
+    iterations <- 1200
+    burnin <- 200
     thinning <- 5
 
     nout <- (iterations-burnin)/thinning
@@ -181,5 +181,5 @@ colnames(cluPPMX) <- c("mean trt 1", "mean trt 2", "sd trt 1", "sd trt 2")
 cluPPMX <- cluPPMX[, c(1, 3, 2, 4)]
 cluPPMX
 
-save(resPPMX, file="output/sensitivity/res1.RData")
-save(cluPPMX, file="output/sensitivity/clu1.RData")
+save(resPPMX, file="output/sensitivity/res4.RData")
+save(cluPPMX, file="output/sensitivity/clu4.RData")
