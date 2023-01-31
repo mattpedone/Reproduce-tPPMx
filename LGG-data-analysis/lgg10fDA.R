@@ -72,7 +72,7 @@ myres0 <- foreach(k = 1:10) %dorng%
     res0 <- tryCatch(expr = ppmxct(y = data.matrix(Y_train), X = data.frame(X_train),
                                    Xpred = data.frame(X_test), Z = data.frame(Z_train),
                                    Zpred = data.frame(Z_test), asstreat = trtsgn_train, #treatment,
-                                   PPMx = 1, cohesion = 2, kappa = c(.1, 10, 5, 2.5), sigma = c(0.01, .5, 6),
+                                   PPMx = 1, cohesion = 2, kappa = c(.1, 20, 5, 2.5), sigma = c(0.01, .5, 6),
                                    similarity = 2, consim = 2, similparam = vec_par,
                                    calibration = 2, coardegree = 2, modelpriors,
                                    update_hierarchy = T,
@@ -216,10 +216,57 @@ for(k in 1:10){
   df <- ggmcmc::ggs(lpml[[k]])
   pl <- ggplot2::ggplot(df, aes(x = Iteration, y = value)) +
     geom_line() + theme_classic() + ggtitle(paste0("Fold ", k)) +
-    xlab("Iterations") + ylab("lpml") + ylim(c(-250, -50))
+    xlab("Iterations") + ylab("lpml")# + ylim(c(-250, -50))
   assign(paste("c", k, sep=""), pl)
 }
 
 plpml <- ggpubr::ggarrange(c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, ncol = 2, nrow=5,
                            common.legend = TRUE, legend="bottom")
 plpml
+
+for(k in 1:10){
+  #k=4
+  out_ppmx <- myres0[[k]]
+
+  df_sigma <- rbind(data.frame(table(round(out_ppmx$sigmangg[1,],1))),
+                    data.frame(table(round(out_ppmx$sigmangg[2,],1))))
+  vec <- c(rep("Treatment 1", dim(table(out_ppmx$sigmangg[1,]))), rep("Treatment 2", dim(table(out_ppmx$sigmangg[2,]))))
+  df_sigma <- cbind(df_sigma, Treatment = as.factor(vec))
+  df <- df_sigma %>%
+    group_by(Treatment)
+  colnames(df) <- c("sigma", "frequency", "Treatment")
+
+  sigma <- ggplot(df, aes(x=sigma, y=frequency/nout, fill = Treatment)) +
+    geom_bar(stat = "identity", position = "dodge", width = 0.1) +
+    ylab("proportion") + xlab(expression(sigma)) + ggtitle(paste0("Fold ", k)) +
+    ylim(0, 0.75)
+  assign(paste("sp", k, sep=""), sigma)
+
+  df_kappa <- rbind(data.frame(table(round(out_ppmx$kappangg[1,],1))),
+                    data.frame(table(round(out_ppmx$kappangg[2,],1))))
+  vec <- c(rep("Treatment 1", dim(table(out_ppmx$kappangg[1,]))), rep("Treatment 2", dim(table(out_ppmx$kappangg[2,]))))
+  df_kappa <- cbind(df_kappa, Treatment = as.factor(vec))
+  df <- df_kappa %>%
+    group_by(Treatment)
+  colnames(df) <- c("kappa", "frequency", "Treatment")
+
+  kappa <- ggplot(df, aes(x=kappa, y=frequency/nout, fill = Treatment)) +
+    geom_bar(stat = "identity", position = "dodge", width = 0.1) +
+    ylab("proportion") + xlab(expression(kappa)) + ggtitle(paste0("Fold ", k)) +
+    ylim(0, 0.75)
+  assign(paste("kp", k, sep=""), kappa)
+  #ksp <- ggpubr::ggarrange(sigma, kappa, nrow=1, ncol = 2, legend = "none" )#,
+  #                        #common.legend = TRUE, legend="bottom")
+  #ksp <- ggpubr::annotate_figure(ksp, top = ggpubr::text_grob(paste("Fold ", k)))
+  #assign(paste("ksp", k, sep=""), ksp)
+}
+
+
+pks <- ggpubr::ggarrange(sp1, kp1, sp2, kp2, sp3, kp3, sp4, kp4, sp5, kp5, sp6, kp6,
+                         sp7, kp7, sp8, kp8, sp9, kp9, sp10, kp10,
+                         ncol = 4, nrow=5,
+                         common.legend = TRUE, legend="bottom")
+#ggsave(pks, device = "pdf", path = "figs", filename = "ks_plot.pdf")
+pks
+
+
