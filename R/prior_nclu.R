@@ -1,10 +1,13 @@
+rm(list=ls())
+set.seed(121)
+
+library(treatppmx)
+library(xtable)
 library(dplyr)
 library(tibble)
 library(tidyselect)
 library(ggplot2)
 library(vweights)
-library(treatppmx)
-set.seed(121)
 
 nobs <- 50
 
@@ -40,12 +43,13 @@ vec_par <- c(0.0, 2.0, .5, 1.0, 2.0, 2.0, 0.1)
 iterations <- 10000; burnin <- 0; thinning <- 1
 
 #beta <- 48.4185; sigma <- .25; theta <- 19.233
-beta <- 1.0; sigma <- .7553; theta <- 19.233
+beta <- 1.0; sigma <- .7353; theta <- 19.233
 
 nout <- (iterations-burnin)/thinning
 
 ####---- Number of Clusters ----#####
 
+# (iv) NGGP-nocal \sigma = 0.7353, \kappa = 0.7353
 ngg_nocal <- prior_ppmx(X = X, PPMx = 1, cohesion = 2, alpha = beta, #*sigma,
                              sigma = sigma, similarity = 2, consim = 2,
                              similparam = vec_par, calibration = 0,
@@ -53,6 +57,7 @@ ngg_nocal <- prior_ppmx(X = X, PPMx = 1, cohesion = 2, alpha = beta, #*sigma,
                              thin = thinning, nclu_init = 30)
 res1 <- ngg_nocal$nclu
 
+# (iii) DP-sim \kappa = 19.2333
 dp_coa <- prior_ppmx(X = X, PPMx = 1, cohesion = 1, alpha = theta, #1, #2,
                              sigma = sigma, similarity = 2, consim = 2,
                              similparam = vec_par, calibration = 2,
@@ -60,6 +65,7 @@ dp_coa <- prior_ppmx(X = X, PPMx = 1, cohesion = 1, alpha = theta, #1, #2,
                              thin = thinning, nclu_init = 30)
 res2 <- dp_coa$nclu
 
+# (v) NGGP-sim \sigma = 0.7353, \kappa = 0.7353
 ngg_coa <- prior_ppmx(X = X, PPMx = 1, cohesion = 2, alpha = beta, #*sigma,
                              sigma = sigma, similarity = 2, consim = 2,
                              similparam = vec_par, calibration = 2,
@@ -67,7 +73,7 @@ ngg_coa <- prior_ppmx(X = X, PPMx = 1, cohesion = 2, alpha = beta, #*sigma,
                              thin = thinning, nclu_init = 30)
 res3 <- ngg_coa$nclu
 
-
+# (i) DP \kappa = 19.2333
 dp <- prior_ppmx(X = X, PPMx = 0, cohesion = 1, alpha = theta,
                              sigma = sigma, similarity = 1, consim = 1,
                              similparam = vec_par, calibration = 0,
@@ -75,16 +81,17 @@ dp <- prior_ppmx(X = X, PPMx = 0, cohesion = 1, alpha = theta,
                              thin = thinning, nclu_init = 30)
 res4 <- dp$nclu
 
-res <- t(rbind(res1/nout, res2/nout, res3/nout, res4/nout, 
+# (ii) NGGP \sigma = 0.7353, \kappa = 0.7353
+res <- t(rbind(res1/nout, res2/nout, res3/nout, res4/nout,
                c(round(vweights::computepnclu(nobs, sigma, beta*sigma), 5))))
 
 res <- (res[which(rowSums(res) != 0),])
 res[which(res==0)] <- NA
 res <- rownames_to_column(as.data.frame(res), var = "cluster")
-newres <- cbind(similarity = c(rep("NGGP-nocal", nrow(res)), 
-                               #rep("NGG-dd-cal", nrow(res)), 
-                               rep("DP-sim", nrow(res)), 
-                               rep("NGGP-sim", nrow(res)), 
+newres <- cbind(similarity = c(rep("NGGP-nocal", nrow(res)),
+                               #rep("NGG-dd-cal", nrow(res)),
+                               rep("DP-sim", nrow(res)),
+                               rep("NGGP-sim", nrow(res)),
                                rep("DP", nrow(res)), rep("NGGP", nrow(res))),
                 cluster = rep(res[,1], 5),
                 freq = c(unlist(res[, c(2:6)])))
@@ -104,7 +111,7 @@ plot1 <- ggplot(dfres, aes(x=cluster, y=freq, group=similarity, color=similarity
   theme_classic() +
   #xlab(expression(c)) +
   #ylab(expression(P(C[n] == c)))
-  labs(x = expression(c), y = expression(P(C[50] == c)), 
+  labs(x = expression(c), y = expression(P(C[50] == c)),
        color = expression(' '))
 
 plot1 + theme(legend.position=c(.75,.75), legend.key.size = unit(1, 'cm'))
@@ -125,7 +132,7 @@ ggsave("figs/plot_pnc.pdf")
 #  #scale_color_manual(c("darkgrey", "darkgrey", "darkgrey", "darkgrey", "darkgrey")) +
 #  #xlab(expression(c)) +
 #  #ylab(expression(P(C[n] == c)))
-#  labs(x = expression(c), y = expression(P(C[n] == c)), 
+#  labs(x = expression(c), y = expression(P(C[n] == c)),
 #       color = expression(' '))
 
 ####---- Cardinalities ----#####
@@ -176,7 +183,9 @@ ps_ngg <- mean(apply(tab, 2, mean, na.rm = T))
 
 avgs <- c(avg_dp, avg_dp_coa, avg_ngg, avg_ngg_nocal, avg_ngg_coa)
 pss <- c(ps_dp, ps_dp_coa, ps_ngg, ps_ngg_nocal, ps_ngg_coa)
-tab <- rbind(avgs, pss)
-colnames(tab) <- c("DP", "DP-sim", "NGG", "NGG-nocal", "NGG-sim")
-rownames(tab) <- c("Average number of clusters", "Proportion of singletons")
+tab <- round(rbind(avgs, pss*100), 2)
+colnames(tab) <- c("DP", "DP-sim", "NGGP", "NGGP-nocal", "NGGP-sim")
+rownames(tab) <- c("Av. # clusters", "% singletons")
 tab
+xtable(tab, caption = "Average number of clusters and proportion of singletons corresponding to the
+5 priors considered.")
