@@ -37,7 +37,7 @@ for(i in 1:nrow(Y)){
 table(matchRTComp[,9:10])
 vectf <- c(1, 17, 33, 49, 65, 81, 97, 113, 129, 145, 159)
 #load("/home/matt/Dropbox/PHD/study-treatppmx/output/lgg12aprs121.RData")
-nout <- 16000
+nout <- 1600
 X <- scale(matchRTComp[,16:38])
 Z <- scale(matchRTComp[,c(11,13)])
 
@@ -56,7 +56,7 @@ myres0 <- foreach(k = 1:10) %dorng%
     trtsgn_test <- trtsgn[currfold]
 
     modelpriors <- list()
-    modelpriors$hP0_m0 <- rep(0, ncol(Y_train)); modelpriors$hP0_nu0 <- 1
+    modelpriors$hP0_m0 <- rep(0, ncol(Y_train)); modelpriors$hP0_nu0 <- .1
     modelpriors$hP0_s0 <- ncol(Y_train) + 2; modelpriors$hP0_Lambda0 <- 1
 
     #n_aux <- 5 # auxiliary variable for Neal's Algorithm 8
@@ -72,17 +72,17 @@ myres0 <- foreach(k = 1:10) %dorng%
     res0 <- tryCatch(expr = ppmxct(y = data.matrix(Y_train), X = data.frame(X_train),
                                    Xpred = data.frame(X_test), Z = data.frame(Z_train),
                                    Zpred = data.frame(Z_test), asstreat = trtsgn_train, #treatment,
-                                   PPMx = 1, cohesion = 2, kappa = c(.1, 20, 5, 2.5), sigma = c(0.01, .5, 6),
+                                   PPMx = 1, cohesion = 2, kappa = c(.1, 10, 5, 2.5), sigma = c(0.01, .5, 6),
                                    similarity = 2, consim = 2, similparam = vec_par,
                                    calibration = 2, coardegree = 2, modelpriors,
                                    update_hierarchy = T,
-                                   hsp = F, iter = iterations, burn = burnin, thin = thinning,
-                                   mhtunepar = c(0.05, 0.05), CC = 3, reuse = 1,
+                                   hsp = T, iter = iterations, burn = burnin, thin = thinning,
+                                   mhtunepar = c(0.05, 0.05), CC = 5, reuse = 1,
                                    nclu_init = 10), error = function(e){FALSE})
     return(res0)
   }
 
-#save(myres0, file = "output/lgg-da/lgg10fDA_jan31.RData")
+save(myres0, file = "output/lgg-da/lgg10fDA_jan31.RData")
 
 for(k in 1:K){
   currfold <- (vectf[k]:(vectf[k+1]-1))
@@ -203,3 +203,23 @@ pred_meas <- c(NPC, ESM)
 save(pred_meas, file = "output/lgg-da/pred_meas_lgg.RData")
 save(resPPMX, file = "output/lgg-da/resPPMX_lgg.RData")
 save(clu, file = "output/lgg-da/clu_lgg.RData")
+
+lpml <- list()
+for(k in 1:10){
+  #currfold <- (vectf[k]:(vectf[k+1]-1))
+  res0 <- myres0[[k]]
+  vec <- res0$lpml
+  lpml[[k]] <- coda::mcmc(matrix(vec, nrow = nout, ncol=1))
+}
+
+for(k in 1:10){
+  df <- ggmcmc::ggs(lpml[[k]])
+  pl <- ggplot2::ggplot(df, aes(x = Iteration, y = value)) +
+    geom_line() + theme_classic() + ggtitle(paste0("Fold ", k)) +
+    xlab("Iterations") + ylab("lpml") + ylim(c(-250, -50))
+  assign(paste("c", k, sep=""), pl)
+}
+
+plpml <- ggpubr::ggarrange(c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, ncol = 2, nrow=5,
+                           common.legend = TRUE, legend="bottom")
+plpml
