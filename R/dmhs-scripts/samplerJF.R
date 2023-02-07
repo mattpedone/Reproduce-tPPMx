@@ -7,7 +7,7 @@ library(doParallel)
 library(doRNG)
 
 #options(mc.cores = parallel::detectCores())
-registerDoParallel(cores = 5)
+registerDoParallel(cores = 25)
 rstan_options(auto_write = TRUE)
 
 loadRData <- function(fileName){
@@ -16,7 +16,7 @@ loadRData <- function(fileName){
   get(ls()[ls() != "fileName"])
 }
 
-simdata <- loadRData("~/Dropbox/PHD/study-treatppmx/data/scen3a.RData")
+simdata <- loadRData("~/Dropbox/PHD/study-treatppmx/data/scen1a.RData")
 
 npc2 <- function(output, trtsgn, myoutot){
   K <- dim(output)[3]
@@ -54,7 +54,7 @@ J <- dim(Yl[[1]])[2]
 p <- dim(Xl[[1]])[2]
 q <- dim(Zl[[1]])[2]
 
-K <- 5#repliche
+K <- 50#repliche
 npat_pred <- 28
 
 Y <- array(0, dim = c(n + npat_pred, J, R))
@@ -91,23 +91,23 @@ res <- foreach(k = 1:K) %dorng%
     X_train <- X_train[which(trt[1:124,k] == 0),]
     Y_train <- Y[1:124, ,k]
     Y_train <- Y_train[which(trt[1:124,k] == 0),]
-    
+
     X_test <- Xdis[125:180,,k]
     Y_test <- Y[125:180,,k]
-    
-    ss_data = list(N = dim(X_train)[1], M = dim(X_test)[1], J = dim(Y_train)[2], 
-                    P = dim(X_train)[2], X = X_train, Xp = X_test, Y = Y_train, 
+
+    ss_data = list(N = dim(X_train)[1], M = dim(X_test)[1], J = dim(Y_train)[2],
+                    P = dim(X_train)[2], X = X_train, Xp = X_test, Y = Y_train,
                     sd_prior = 1.0, psi = .25)
-    
-    fit <- rstan::stan(file = "model.stan", data = ss_data, cores = 1, iter = 100, 
+
+    fit <- rstan::stan(file = "model.stan", data = ss_data, cores = 1, iter = 100,
                         chains = 1, verbose = T, warmup = 50, seed = 121,
                         control = list(max_treedepth = 15, adapt_delta = 0.995))#995))
-    
-    
+
+
     #check_hmc_diagnostics(fit1)
     params <- rstan::extract(fit)
     pp <- apply(params$pipred, c(2,3), median)
-    
+
     out <- cbind(pp1 = pp[1:28,], pp2 = pp[29:56,])
     return(out)
   }
@@ -116,22 +116,22 @@ res <- foreach(k = 1:K) %dorng%
 
 for(k in 1:K){
   pp1 <- res[[k]][,1:3]
-  A1 <- pp1%*%wk 
+  A1 <- pp1%*%wk
   pp2 <- res[[k]][,4:6]
-  A2 <- pp2%*%wk 
-  
+  A2 <- pp2%*%wk
+
   predAPT_all[, 1, k] <- A1
   predAPT_all[, 2, k] <- A2
   myt <- as.numeric(A1 < A2) + 1
   predAPT_all[, 3, k] <- myt
   predAPT_all[, 4:9, k] <- cbind(pp1, pp2)
-  
+
   myprob <- simdata$prob[[k]]
 }
 mywk1 <- myprob[[1]][125:152,]%*%wk
 mywk2 <- myprob[[2]][125:152,]%*%wk
 optrt <- as.numeric(mywk1 < mywk2) + 1
-utsum <- sum(abs(mywk2 - mywk1)) 
+utsum <- sum(abs(mywk2 - mywk1))
 utdiff <- abs(as.numeric(mywk2 - mywk1))
 
 #MOT
@@ -162,6 +162,6 @@ for(k in 1:K){
 NPC <- c(round(mean(PPMXCUT), 4), round(sd(PPMXCUT), 4))
 
 #results
-resPPMX <- rbind(MOT, MTUg, NPC)#, WAIC, lpml)
-colnames(resPPMX) <- c("mean", "sd")
-resPPMX
+resDMHS <- rbind(MOT, MTUg, NPC)#, WAIC, lpml)
+colnames(resDMHS) <- c("mean", "sd")
+save(resDMHS, file="output/simulation-study/main/scen1a_dmhs_res.RData")
