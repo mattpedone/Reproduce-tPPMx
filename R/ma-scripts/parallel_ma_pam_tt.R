@@ -15,8 +15,8 @@ loadRData <- function(fileName){
 }
 #for(sc in 10:12){
 #sc <- 2
-simdata <- loadRData(paste0("data/scen1a.RData"))
-mypath <- c("output/simulation-study/main/scen1a_pam")
+simdata <- loadRData(paste0("data/scen3b.RData"))
+mypath <- c("output/simulation-study/main/scen3b_pam")
 ################################ Functions ########################################
 mymultt <- function(Xtrain, X.pred){
   myln <- length(Xtrain[,1])

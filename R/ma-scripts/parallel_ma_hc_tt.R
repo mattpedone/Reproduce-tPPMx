@@ -15,8 +15,8 @@ loadRData <- function(fileName){
 }
 #for(sc in 10:12){
 #sc <- 2
-  simdata <- loadRData(paste0("data/scen1a.RData"))
-  mypath <- c("output/simulation-study/main/scen1a_hc")
+  simdata <- loadRData(paste0("data/scen3b.RData"))
+  mypath <- c("output/simulation-study/main/scen3b_hc")
 ################################ Functions ########################################
 mymultt <- function(Xtrain, X.pred){
   myln <- length(Xtrain[,1])
@@ -130,7 +130,7 @@ n <- 124
 K <- 50
 
 #cor_all <- 10#parallel::detectCores()-1#cores to be allocated
-registerDoParallel(cores = (K/2))
+registerDoParallel(cores = (K))
 
 
 HC.sum.all <- foreach(k = 1:K) %dorng%
