@@ -41,7 +41,7 @@ npc2 <- function(output, trtsgn, myoutot){
   return(res)
 }
 
-K <- 50#repliche
+K <- 10#repliche
 npat_pred <- 28
 
 predAPT_all <- array(0, dim = c(npat_pred, 9, K))
@@ -82,7 +82,7 @@ myres0 <- foreach(k = 1:K) %dorng%
     res0 <- tryCatch(expr = ppmxct(y = data.matrix(Y_train), X = data.frame(X_train),
                                    Xpred = data.frame(X_test), Z = data.frame(Z_train),
                                    Zpred = data.frame(Z_test), asstreat = trtsgn_train,
-                                   PPMx = 1, cohesion = 2, kappa = c(1, 10, 5, 1), sigma = c(0.01, .5, 6),
+                                   PPMx = 1, cohesion = 2,
                                    similarity = 2, consim = 2, similparam = vec_par,
                                    calibration = 2, coardegree = 2, modelpriors,
                                    update_hierarchy = T,
@@ -181,5 +181,5 @@ colnames(cluPPMX) <- c("mean trt 1", "mean trt 2", "sd trt 1", "sd trt 2")
 cluPPMX <- cluPPMX[, c(1, 3, 2, 4)]
 cluPPMX
 
-save(resPPMX, file="output/simulation-study/main/scen1a_ppmx_res.RData")
-save(cluPPMX, file="output/simulation-study/main/scen1a_ppmx_clu.RData")
+save(resPPMX, file="output/simulation-study/main/scen1a_ppmx_resnks.RData")
+save(cluPPMX, file="output/simulation-study/main/scen1a_ppmx_clunks.RData")
