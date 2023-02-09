@@ -210,8 +210,8 @@ for(k in 1:K){
       ### clustering using CONSENSUS MATRIX method ###################################
       con_clu <- ConsensusClusterPlus(t(s_train_pred),maxK=15,reps=500,pItem=0.90,pFeature=1,
                                       #clusterAlg="hc",distance="pearson",
-                                      clusterAlg="km",distance="euclidean",
-                                      #clusterAlg="pam",distance="manhattan",
+                                      #clusterAlg="km",distance="euclidean",
+                                      clusterAlg="pam",distance="manhattan",
                                       seed=126)
 
       hc2 <- con.cluster(con_clu[[2]][["consensusMatrix"]], ymat = s_train_ymat,  yvec = s_train_yord,
@@ -265,8 +265,8 @@ utpred1APT.all <- matrix(0, nrow = 158, ncol = 19)
 
 rst.hc<-ConsensusClusterPlus(t(data$pred),maxK=15,reps=500,pItem=0.90,pFeature=1,
                              #clusterAlg="hc",distance="pearson",
-                             clusterAlg="km",distance="euclidean",
-                             #clusterAlg="pam",distance="manhattan",
+                             #clusterAlg="km",distance="euclidean",
+                             clusterAlg="pam",distance="manhattan",
                              seed=126);
 
 
