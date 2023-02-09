@@ -82,7 +82,7 @@ myres0 <- foreach(k = 1:K) %dorng%
     res0 <- tryCatch(expr = ppmxct(y = data.matrix(Y_train), X = data.frame(X_train),
                                    Xpred = data.frame(X_test), Z = data.frame(Z_train),
                                    Zpred = data.frame(Z_test), asstreat = trtsgn_train,
-                                   PPMx = 1, cohesion = 2,
+                                   PPMx = 1, cohesion = 2,kappa = 1,
                                    similarity = 2, consim = 2, similparam = vec_par,
                                    calibration = 2, coardegree = 2, modelpriors,
                                    update_hierarchy = T,
