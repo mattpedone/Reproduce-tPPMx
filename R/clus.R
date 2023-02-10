@@ -28,7 +28,7 @@ wk <- c(0, 40, 100)
 cor_all <- 10#parallel::detectCores()-1#cores to be allocated
 registerDoParallel(cores = cor_all)
 
-myres0 <- foreach(k = 1:K) %do%
+myres0 <- foreach(k = 1:K) %dopar%
   {
     X_train <- data.frame(simdata[[k]]$pred[1:170, ])
     Z_train <- data.frame(simdata[[k]]$prog[1:170, ])
@@ -42,8 +42,8 @@ myres0 <- foreach(k = 1:K) %do%
     trtsgn_test <- simdata[[k]]$treatment[171:200]
 
     modelpriors <- list()
-    modelpriors$hP0_m0 <- rep(0, ncol(Y_train)); modelpriors$hP0_nu0 <- 1
-    modelpriors$hP0_s0 <- ncol(Y_train) + 2; modelpriors$hP0_Lambda0 <- 1
+    modelpriors$hP0_m0 <- rep(0, ncol(Y_train)); modelpriors$hP0_nu0 <- 10
+    modelpriors$hP0_s0 <- ncol(Y_train) + 2; modelpriors$hP0_Lambda0 <- 10
 
     vec_par <- c(0.0, 1.0, .5, 1.0, 2.0, 2.0, 0.1)
     #double m0=0.0, s20=10.0, v=.5, k0=1.0, nu0=2.0, n0 = 2.0;
@@ -57,7 +57,7 @@ myres0 <- foreach(k = 1:K) %do%
     res0 <- tryCatch(expr = ppmxct(y = data.matrix(Y_train), X = data.frame(X_train),
                                    Xpred = data.frame(X_test), Z = data.frame(Z_train),
                                    Zpred = data.frame(Z_test), asstreat = trtsgn_train,
-                                   PPMx = 1, cohesion = 1, kappa = c(1, 10, 5, 1), sigma = c(0.01, .5, 6),
+                                   PPMx = 1, cohesion = 2, kappa = 1,
                                    similarity = 2, consim = 2, similparam = vec_par,
                                    calibration = 2, coardegree = 2, modelpriors,
                                    update_hierarchy = T,
@@ -250,7 +250,7 @@ for (k in 1:K) {
   simdata[[k]] <- treatppmx::genmech_clu2(npred = 10)
 }
 
-myres0 <- foreach(k = 1:K) %do%
+myres0 <- foreach(k = 1:K) %dopar%
   {
     X_train <- data.frame(simdata[[k]]$pred[1:170, ])
     Z_train <- data.frame(simdata[[k]]$prog[1:170, ])
@@ -264,8 +264,8 @@ myres0 <- foreach(k = 1:K) %do%
     trtsgn_test <- simdata[[k]]$treatment[171:200]
 
     modelpriors <- list()
-    modelpriors$hP0_m0 <- rep(0, ncol(Y_train)); modelpriors$hP0_nu0 <- 1
-    modelpriors$hP0_s0 <- ncol(Y_train) + 2; modelpriors$hP0_Lambda0 <- 1
+    modelpriors$hP0_m0 <- rep(0, ncol(Y_train)); modelpriors$hP0_nu0 <- 10
+    modelpriors$hP0_s0 <- ncol(Y_train) + 2; modelpriors$hP0_Lambda0 <- 10
 
     vec_par <- c(0.0, 1.0, .5, 1.0, 2.0, 2.0, 0.1)
     #double m0=0.0, s20=10.0, v=.5, k0=1.0, nu0=2.0, n0 = 2.0;
@@ -279,8 +279,7 @@ myres0 <- foreach(k = 1:K) %do%
     res0 <-
       tryCatch(expr = ppmxct(y = data.matrix(Y_train), X = data.frame(X_train),
           Xpred = data.frame(X_test), Z = data.frame(Z_train), Zpred = data.frame(Z_test),
-          asstreat = trtsgn_train, PPMx = 1, cohesion = 2, kappa = c(1, 10, 5, 1),
-          sigma = c(0.01, .5, 6), similarity = 2, consim = 2, similparam = vec_par,
+          asstreat = trtsgn_train, PPMx = 1, cohesion = 2, kappa = 1, similarity = 2, consim = 2, similparam = vec_par,
           calibration = 2, coardegree = 2, modelpriors, update_hierarchy = T, hsp = T,
           iter = iterations, burn = burnin, thin = thinning, mhtunepar = c(0.05, 0.05),
           CC = 5, reuse = 1, nclu_init = 10), error = function(e) {FALSE})
@@ -499,7 +498,7 @@ for (k in 1:K) {
   simdata[[k]] <- treatppmx::genmech_clu2(npred = 20)
 }
 
-myres0 <- foreach(k = 1:K) %do%
+myres0 <- foreach(k = 1:K) %dopar%
   {
     X_train <- data.frame(simdata[[k]]$pred[1:170, ])
     Z_train <- data.frame(simdata[[k]]$prog[1:170, ])
@@ -513,8 +512,8 @@ myres0 <- foreach(k = 1:K) %do%
     trtsgn_test <- simdata[[k]]$treatment[171:200]
 
     modelpriors <- list()
-    modelpriors$hP0_m0 <- rep(0, ncol(Y_train)); modelpriors$hP0_nu0 <- 1
-    modelpriors$hP0_s0 <- ncol(Y_train) + 2; modelpriors$hP0_Lambda0 <- 1
+    modelpriors$hP0_m0 <- rep(0, ncol(Y_train)); modelpriors$hP0_nu0 <- 10
+    modelpriors$hP0_s0 <- ncol(Y_train) + 2; modelpriors$hP0_Lambda0 <- 10
 
     vec_par <- c(0.0, 1.0, .5, 1.0, 2.0, 2.0, 0.1)
     #double m0=0.0, s20=10.0, v=.5, k0=1.0, nu0=2.0, n0 = 2.0;
@@ -527,8 +526,7 @@ myres0 <- foreach(k = 1:K) %do%
 
     res0 <- tryCatch(expr = ppmxct(y = data.matrix(Y_train), X = data.frame(X_train),
           Xpred = data.frame(X_test), Z = data.frame(Z_train), Zpred = data.frame(Z_test),
-          asstreat = trtsgn_train, PPMx = 1, cohesion = 2, kappa = c(1, 10, 5, 1),
-          sigma = c(0.01, .5, 6), similarity = 2, consim = 2, similparam = vec_par,
+          asstreat = trtsgn_train, PPMx = 1, cohesion = 2, kappa = 1, similarity = 2, consim = 2, similparam = vec_par,
           calibration = 2, coardegree = 2, modelpriors, update_hierarchy = T,
           hsp = T, iter = iterations, burn = burnin, thin = thinning,
           mhtunepar = c(0.05, 0.05), CC = 5, reuse = 1, nclu_init = 10),
