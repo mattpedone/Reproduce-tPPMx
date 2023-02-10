@@ -41,7 +41,7 @@ npc2 <- function(output, trtsgn, myoutot){
   return(res)
 }
 
-K <- 10#repliche
+K <- 50#repliche
 npat_pred <- 28
 
 predAPT_all <- array(0, dim = c(npat_pred, 9, K))
@@ -181,5 +181,5 @@ colnames(cluPPMX) <- c("mean trt 1", "mean trt 2", "sd trt 1", "sd trt 2")
 cluPPMX <- cluPPMX[, c(1, 3, 2, 4)]
 cluPPMX
 
-save(resPPMX, file="output/simulation-study/main/scen1a_ppmx_resnks.RData")
-save(cluPPMX, file="output/simulation-study/main/scen1a_ppmx_clunks.RData")
+save(resPPMX, file="output/simulation-study/main/scen1a_ppmx_res.RData")
+save(cluPPMX, file="output/simulation-study/main/scen1a_ppmx_clu.RData")
