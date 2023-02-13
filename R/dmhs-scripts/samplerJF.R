@@ -74,7 +74,7 @@ for(r in 1:R){
   trt[1:124,r] <- trtl[[r]][1:124]-1
   trt[125:152,r] <- 0
   trt[153:180,r] <- 1
-  Xdis[,,r] <- cbind(X[,,r], Z[,,r], trt[,r], (trt[,r]*X[,,r]))
+  Xdis[,,r] <- cbind(rep(1, n + npat_pred), X[,,r], Z[,,r], trt[,r], (trt[,r]*X[,,r]))
 }
 
 #params1 <- params2 <- array(npat_pred, J, K)
@@ -88,9 +88,9 @@ wk <- c(0, 40, 100)
 res <- foreach(k = 1:K) %dorng%
   {
     X_train <- Xdis[1:124, ,k]
-    X_train <- X_train[which(trt[1:124,k] == 0),]
+    #X_train <- X_train[which(trt[1:124,k] == 0),]
     Y_train <- Y[1:124, ,k]
-    Y_train <- Y_train[which(trt[1:124,k] == 0),]
+    #Y_train <- Y_train[which(trt[1:124,k] == 0),]
 
     X_test <- Xdis[125:180,,k]
     Y_test <- Y[125:180,,k]
