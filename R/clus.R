@@ -57,7 +57,7 @@ myres0 <- foreach(k = 1:K) %dopar%
     res0 <- tryCatch(expr = ppmxct(y = data.matrix(Y_train), X = data.frame(X_train),
                                    Xpred = data.frame(X_test), Z = data.frame(Z_train),
                                    Zpred = data.frame(Z_test), asstreat = trtsgn_train,
-                                   PPMx = 1, cohesion = 2, kappa = 1,
+                                   PPMx = 0, cohesion = 2, kappa = 1,
                                    similarity = 2, consim = 2, similparam = vec_par,
                                    calibration = 2, coardegree = 2, modelpriors,
                                    update_hierarchy = T,
@@ -279,7 +279,7 @@ myres0 <- foreach(k = 1:K) %dopar%
     res0 <-
       tryCatch(expr = ppmxct(y = data.matrix(Y_train), X = data.frame(X_train),
           Xpred = data.frame(X_test), Z = data.frame(Z_train), Zpred = data.frame(Z_test),
-          asstreat = trtsgn_train, PPMx = 1, cohesion = 2, kappa = 1, similarity = 2, consim = 2, similparam = vec_par,
+          asstreat = trtsgn_train, PPMx = 0, cohesion = 2, kappa = 1, similarity = 2, consim = 2, similparam = vec_par,
           calibration = 2, coardegree = 2, modelpriors, update_hierarchy = T, hsp = T,
           iter = iterations, burn = burnin, thin = thinning, mhtunepar = c(0.05, 0.05),
           CC = 5, reuse = 1, nclu_init = 10), error = function(e) {FALSE})
@@ -526,7 +526,7 @@ myres0 <- foreach(k = 1:K) %dopar%
 
     res0 <- tryCatch(expr = ppmxct(y = data.matrix(Y_train), X = data.frame(X_train),
           Xpred = data.frame(X_test), Z = data.frame(Z_train), Zpred = data.frame(Z_test),
-          asstreat = trtsgn_train, PPMx = 1, cohesion = 2, kappa = 1, similarity = 2, consim = 2, similparam = vec_par,
+          asstreat = trtsgn_train, PPMx = 0, cohesion = 2, kappa = 1, similarity = 2, consim = 2, similparam = vec_par,
           calibration = 2, coardegree = 2, modelpriors, update_hierarchy = T,
           hsp = T, iter = iterations, burn = burnin, thin = thinning,
           mhtunepar = c(0.05, 0.05), CC = 5, reuse = 1, nclu_init = 10),

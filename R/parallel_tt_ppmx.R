@@ -14,7 +14,7 @@ loadRData <- function(fileName){
   get(ls()[ls() != "fileName"])
 }
 
-simdata <- loadRData("data/scen1a.RData")
+simdata <- loadRData("data/scen2a.RData")
 
 npc2 <- function(output, trtsgn, myoutot){
   K <- dim(output)[3]
@@ -181,5 +181,5 @@ colnames(cluPPMX) <- c("mean trt 1", "mean trt 2", "sd trt 1", "sd trt 2")
 cluPPMX <- cluPPMX[, c(1, 3, 2, 4)]
 cluPPMX
 
-save(resPPMX, file="output/simulation-study/main/scen1a_ppmx_res.RData")
-save(cluPPMX, file="output/simulation-study/main/scen1a_ppmx_clu.RData")
+save(resPPMX, file="output/simulation-study/main/scen2a_ppmx_res.RData")
+save(cluPPMX, file="output/simulation-study/main/scen2a_ppmx_clu.RData")
