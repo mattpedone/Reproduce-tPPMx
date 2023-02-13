@@ -60,7 +60,7 @@ npat_pred <- 28
 Y <- array(0, dim = c(n + npat_pred, J, R))
 X <- array(0, dim = c(n + npat_pred, p, R))
 Z <- array(0, dim = c(n + npat_pred, q, R))
-Xdis <- array(0, dim = c(n + npat_pred, (p + p + q + 1), R))
+Xdis <- array(0, dim = c(n + npat_pred, (p + p + q + 2), R))
 trt <- matrix(0, n + npat_pred, R)
 
 
