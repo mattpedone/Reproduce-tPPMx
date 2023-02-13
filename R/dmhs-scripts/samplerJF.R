@@ -7,7 +7,7 @@ library(doParallel)
 library(doRNG)
 
 #options(mc.cores = parallel::detectCores())
-registerDoParallel(cores = 25)
+registerDoParallel(cores = 50)
 rstan_options(auto_write = TRUE)
 
 loadRData <- function(fileName){
@@ -99,8 +99,8 @@ res <- foreach(k = 1:K) %dorng%
                     P = dim(X_train)[2], X = X_train, Xp = X_test, Y = Y_train,
                     sd_prior = 1.0, psi = .25)
 
-    fit <- rstan::stan(file = "R/dmhs-scripts/model.stan", data = ss_data, cores = 1, iter = 100,
-                        chains = 1, verbose = T, warmup = 50, seed = 121,
+    fit <- rstan::stan(file = "R/dmhs-scripts/model.stan", data = ss_data, cores = 1, iter = 1500,
+                        chains = 1, verbose = T, warmup = 500, seed = 121,
                         control = list(max_treedepth = 15, adapt_delta = 0.995))#995))
 
 
