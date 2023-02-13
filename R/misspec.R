@@ -20,7 +20,7 @@ gof_all <- matrix(0, nrow = K, ncol = 2)
 wk <- c(0, 40, 100)
 
 cor_all <- parallel::detectCores() - 1#cores to be allocated
-registerDoParallel(cores = cor_all)
+registerDoParallel(cores = K)
 
 simdata <- list()
 for (k in 1:K) {
@@ -270,7 +270,7 @@ gof_all <- matrix(0, nrow = K, ncol = 2)
 wk <- c(0, 40, 100)
 
 cor_all <- parallel::detectCores() - 1#cores to be allocated
-registerDoParallel(cores = cor_all)
+registerDoParallel(cores = K)
 
 simdata <- list()
 for (k in 1:K) {
