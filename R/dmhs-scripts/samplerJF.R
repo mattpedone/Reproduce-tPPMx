@@ -7,7 +7,7 @@ library(doParallel)
 library(doRNG)
 
 #options(mc.cores = parallel::detectCores())
-registerDoParallel(cores = 50)
+registerDoParallel(cores = 10)
 rstan_options(auto_write = TRUE)
 
 loadRData <- function(fileName){
@@ -16,7 +16,7 @@ loadRData <- function(fileName){
   get(ls()[ls() != "fileName"])
 }
 
-simdata <- loadRData("data/scen3b.RData")
+simdata <- loadRData("data/scen3a.RData")
 
 npc2 <- function(output, trtsgn, myoutot){
   K <- dim(output)[3]
@@ -60,7 +60,7 @@ npat_pred <- 28
 Y <- array(0, dim = c(n + npat_pred, J, R))
 X <- array(0, dim = c(n + npat_pred, p, R))
 Z <- array(0, dim = c(n + npat_pred, q, R))
-Xdis <- array(0, dim = c(n + npat_pred, (p + p + q + 2), R))
+Xdis <- array(0, dim = c(n + npat_pred, (p + p + q + 1), R))
 trt <- matrix(0, n + npat_pred, R)
 
 
@@ -74,7 +74,7 @@ for(r in 1:R){
   trt[1:124,r] <- trtl[[r]][1:124]-1
   trt[125:152,r] <- 0
   trt[153:180,r] <- 1
-  Xdis[,,r] <- cbind(rep(1, n + npat_pred), X[,,r], Z[,,r], trt[,r], (trt[,r]*X[,,r]))
+  Xdis[,,r] <- cbind(X[,,r], Z[,,r], trt[,r], (trt[,r]*X[,,r]))
 }
 
 #params1 <- params2 <- array(npat_pred, J, K)
