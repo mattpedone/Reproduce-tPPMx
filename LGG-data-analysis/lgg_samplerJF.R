@@ -6,51 +6,15 @@ library(parallel)
 library(doParallel)
 library(doRNG)
 
-#options(mc.cores = parallel::detectCores())
 registerDoParallel(cores = 10)
 rstan_options(auto_write = TRUE)
-
-npc2 <- function(output, trtsgn, myoutot){
-  K <- dim(output)[3]
-  n <- dim(output)[1]
-  myctut <- array(0, dim = c(3, 3, K))
-  myctutSum <- NULL
-  for (i in 1:K) {
-    mycurdata <- output[, , i]
-    mypre <- NULL
-    pretrt1 <- apply(mycurdata[, 1:3], 1, which.max)
-    pretrt2 <- apply(mycurdata[, 4:6], 1, which.max)
-    mypreTall <- cbind(pretrt1, pretrt2)
-    for (j in 1:n) {
-      mypre[j] <- mypreTall[j, trtsgn[j]]
-    }
-    sts <- table(mypre, myoutot)
-    mysdls <- as.numeric(rownames(sts))
-    str1 <- matrix(0, nrow = 3, ncol = 3)
-    str1[mysdls, ] <- sts
-    myctut[, , i] <- str1 * diag(3)
-    myctutSum[i] <- sum(str1 * diag(3))
-  }
-  res <- cbind(myctutSum)
-  return(res)
-}
 
 load("data/LGGdata.rda")
 matchRTComp <- matchRTComp[sample(1:nrow(matchRTComp), size = nrow(matchRTComp), replace = F),]
 trtsgn <- c(matchRTComp[,10]) + 1
-#trtsgn <- ifelse(trtsgn == 1, 2, 1)
 npat <- length(trtsgn)
-#trtsgn <- sample(1:2, npat, replace = TRUE)
 
 K <- 10#numero di fold
-
-predAPT_all <- matrix(0, nrow = npat, ncol = 9)
-nclust_all <- matrix(0, nrow = K, ncol = 6)
-gof_all <- matrix(0, nrow = K, ncol = 2)
-
-wk <- c(0, 40, 100)
-
-registerDoParallel(cores = 10)#alloco solo core necessari
 
 Y <- matrix(0, nrow = npat, ncol = max(as.numeric(matchRTComp[,9])))
 for(i in 1:nrow(Y)){
@@ -59,130 +23,126 @@ for(i in 1:nrow(Y)){
 
 table(matchRTComp[,9:10])
 vectf <- c(1, 17, 33, 49, 65, 81, 97, 113, 129, 145, 159)
-#load("/home/matt/Dropbox/PHD/study-treatppmx/output/lgg12aprs121.RData")
-nout <- 2000
 X <- scale(matchRTComp[,16:38])
 Z <- scale(matchRTComp[,c(11,13)])
 
-#Yl <- Y
-#Xl <- X
-#Zl <- Z
-#trtl <- trtsgn
-
-R <- length(Yl)
-n <- dim(Yl[[1]])[1]
-J <- dim(Yl[[1]])[2]
-p <- dim(Xl[[1]])[2]
-q <- dim(Zl[[1]])[2]
-
-K <- 50#repliche
 npat_pred <- 28
 
-Y <- array(0, dim = c(n + npat_pred, J, R))
-X <- array(0, dim = c(n + npat_pred, p, R))
-Z <- array(0, dim = c(n + npat_pred, q, R))
-Xdis <- array(0, dim = c(n + npat_pred, (p + p + q + 1), R))
-trt <- matrix(0, n + npat_pred, R)
-
-
-for(r in 1:R){
-  Y[1:152,,r] <- Yl[[r]]
-  Y[153:180,,r] <- Y[125:152,,r]
-  X[1:152,,r] <- Xl[[r]]
-  X[153:180,,r] <- X[125:152,,r]
-  Z[1:152,,r] <- Zl[[r]]
-  Z[153:180,,r] <- Z[125:152,,r]
-  trt[1:124,r] <- trtl[[r]][1:124]-1
-  trt[125:152,r] <- 0
-  trt[153:180,r] <- 1
-  Xdis[,,r] <- cbind(X[,,r], Z[,,r], trt[,r], (trt[,r]*X[,,r]))
-}
-
-#params1 <- params2 <- array(npat_pred, J, K)
-
-predAPT_all <- array(0, dim = c(npat_pred, 9, K))
-nclust_all <- matrix(0, nrow = K, ncol = 6)
-gof_all <- matrix(0, nrow = K, ncol = 2)
+n <- npat-npat_pred#dim(Yl[[1]])[1]
+J <- ncol(Y)
+p <- ncol(X)
+q <- ncol(Z)
 
 wk <- c(0, 40, 100)
 
 res <- foreach(k = 1:K) %dorng%
   {
-    X_train <- Xdis[1:124, ,k]
-    X_train <- X_train[which(trt[1:124,k] == 0),]
-    Y_train <- Y[1:124, ,k]
-    Y_train <- Y_train[which(trt[1:124,k] == 0),]
+    currfold <- (vectf[k]:(vectf[k+1]-1))
 
-    X_test <- Xdis[125:180,,k]
-    Y_test <- Y[125:180,,k]
+    Y_train <- Y[-currfold,]
+    ntrain <- dim(Y_train)[1]
+    Y_test <- rbind(Y[currfold,], Y[currfold,])
+    Y <- rbind(Y_train, Y_test)
+    X_train <- X[-currfold,]
+    X_test <- rbind(X[currfold,], X[currfold,])
+    X <- rbind(X_train, X_test)
+    Z_train <- Z[-currfold,]
+    Z_test <- rbind(Z[currfold,], Z[currfold,])
+    Z <- rbind(Z_train, Z_test)
+    trt_train <- trtsgn[-currfold]-1#trtl[[r]][1:124]-1
+    trt_test <- c(rep(0, length(currfold)), rep(1, length(currfold)))
+    trt <- c(trt_train, trt_test)
+    Xdis <- cbind(X, Z, trt, (trt*X))
+    ntot <- dim(Xdis)[1]
+
+    X_train <- Xdis[1:ntrain, ]
+    Y_train <- Y[1:ntrain, ]
+
+    X_test <- Xdis[(ntrain+1):ntot,]
+    Y_test <- Y[(ntrain+1):ntot,]
 
     ss_data = list(N = dim(X_train)[1], M = dim(X_test)[1], J = dim(Y_train)[2],
                     P = dim(X_train)[2], X = X_train, Xp = X_test, Y = Y_train,
                     sd_prior = 1.0, psi = .25)
 
-    fit <- rstan::stan(file = "model.stan", data = ss_data, cores = 1, iter = 100,
-                        chains = 1, verbose = T, warmup = 50, seed = 121,
+    fit <- rstan::stan(file = "R/dmhs-scripts/model.stan", data = ss_data, cores = 1, iter = 1000,
+                        chains = 1, verbose = T, warmup = 200, seed = 121,
                         control = list(max_treedepth = 15, adapt_delta = 0.995))#995))
 
 
-    #check_hmc_diagnostics(fit1)
     params <- rstan::extract(fit)
     pp <- apply(params$pipred, c(2,3), median)
 
-    out <- cbind(pp1 = pp[1:28,], pp2 = pp[29:56,])
+    out <- cbind(pp1 = pp[1:length(currfold),], pp2 = pp[(length(currfold)+1):(2*length(currfold)),])
     return(out)
   }
 
-#summ <- rstan::summary(fit)$summary
+#NPC
+npc_tf <- function(output, trtsgn, myoutot){
+  n <- dim(output)[1]
+  myctut <- matrix(0, nrow = 3, ncol = 3)
+  myctutSum <- NULL
+  mycurdata <- output
+  mypre <- NULL
+  pretrt1 <- apply(mycurdata[, 1:3], 1, which.max)
+  pretrt2 <- apply(mycurdata[, 4:6], 1, which.max)
+  mypreTall <- cbind(pretrt1, pretrt2)
+  for (j in 1:n) {
+    mypre[j] <- mypreTall[j, trtsgn[j]]
+  }
+  sts <- table(mypre, myoutot)
+  mysdls <- as.numeric(rownames(sts))
+  str1 <- matrix(0, nrow = 3, ncol = 3)
+  str1[mysdls, ] <- sts
+  myctut <- str1 * diag(3)
+  myctutSum <- sum(str1 * diag(3))
+  #res <- cbind(myctutSum)
+  return(myctutSum)
+}
 
+
+PPMXCUT <- c()
+temp <- matrix(0, nrow = npat, ncol = 6)
+myt <- list()
 for(k in 1:K){
+  currfold <- (vectf[k]:(vectf[k+1]-1))
+  myoutot <- as.numeric(matchRTComp[currfold,9])#simdata$yord[[k]][131:158,]
+  trtsgn_test <- trtsgn[currfold]#simdata$trtsgn[[k]][131:158]
+
   pp1 <- res[[k]][,1:3]
   A1 <- pp1%*%wk
   pp2 <- res[[k]][,4:6]
   A2 <- pp2%*%wk
 
-  predAPT_all[, 1, k] <- A1
-  predAPT_all[, 2, k] <- A2
-  myt <- as.numeric(A1 < A2) + 1
-  predAPT_all[, 3, k] <- myt
-  predAPT_all[, 4:9, k] <- cbind(pp1, pp2)
+  myt[[k]] <- as.numeric(A1 < A2) + 1
 
-  myprob <- simdata$prob[[k]]
+  temp[currfold,] <- cbind(pp1, pp2)
 }
-mywk1 <- myprob[[1]][125:152,]%*%wk
-mywk2 <- myprob[[2]][125:152,]%*%wk
-optrt <- as.numeric(mywk1 < mywk2) + 1
-utsum <- sum(abs(mywk2 - mywk1))
-utdiff <- abs(as.numeric(mywk2 - mywk1))
-
-#MOT
-PPMXCT <- c()
-for(k in 1:K){
-  PPMXCT[k] <-  sum(abs(predAPT_all[, 3, k] - optrt))
-}
-
-MOT <- c(round(mean(PPMXCT), 4), round(sd(PPMXCT), 4))
-
-#MTUg
-PPMXpp <- c()
-for(k in 1:K){
-  PPMXpp[k] <- -(2*sum(abs((predAPT_all[, 3, k] - optrt)) * utdiff) - utsum);
-}
-
-MTUg <- c(round(mean(PPMXpp/utsum), 4), round(sd(PPMXpp/utsum), 4))
-
-#NPC
-PPMXCUT <- c()
-for(k in 1:K){
-  trtsgn_test <- simdata$trtsgn[[k]][125:152]
-  temp <- array(0, dim = c(28, 6, 1))
-  temp[,,1] <- predAPT_all[, 4:9,k]
-  myoutot <- simdata$yord[[k]][125:152,]
-  PPMXCUT[k] <- npc2(temp, trtsgn_test, myoutot)
-}
-NPC <- c(round(mean(PPMXCUT), 4), round(sd(PPMXCUT), 4))
+NPC <- npc_tf(temp, trtsgn, as.numeric(matchRTComp[,9]))
 
 #results
-resDMHS <- rbind(MOT, MTUg, NPC)#, WAIC, lpml)
-colnames(resDMHS) <- c("mean", "sd")
-save(resDMHS, file="output/simulation-study/main/scen1a_dmhs_res.RData")
+myoutot <- as.numeric(matchRTComp[,9])#simdata$yord[[k]][131:158,]
+mytab <- cbind(myass = unlist(myt), rndass = trtsgn, resp = as.numeric(myoutot>2))
+pred1 <- subset(mytab, mytab[,1]==1)
+table1 <- table(pred1[,3],pred1[,2])
+pred2 <- subset(mytab, mytab[,1]==2)
+table2 <- table(pred2[,3], pred2[,2])
+p1 <- sum(table1)/(sum(table1)+sum(table2))
+p2 <- sum(table2)/(sum(table1)+sum(table2))
+
+if(length(table1) == 4){
+  crt1 <- table1[2,1]/sum(table1[,1])
+}
+if(length(table1) < 4){
+  crt1 <- as.numeric(row.names(table1))
+}
+
+if(length(table2) == 4){
+  crt2 <- table2[2,2]/sum(table2[,2])
+}
+if(length(table2) < 4){
+  crt2 <- as.numeric(row.names(table2))
+}
+ESM <- c(crt1*p1 + crt2*p2 - sum(as.numeric(myoutot>2))/npat)
+
+NPC; ESM

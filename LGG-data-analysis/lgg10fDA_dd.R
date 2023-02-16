@@ -42,54 +42,54 @@ for(i in 1:nrow(Y)){
 
 table(matchRTComp[,9:10])
 vectf <- c(1, 17, 33, 49, 65, 81, 97, 113, 129, 145, 159)
-#load("/home/matt/Dropbox/PHD/study-treatppmx/output/lgg12aprs121.RData")
+
 nout <- 2000
 X <- scale(matchRTComp[,16:38])
 Z <- scale(matchRTComp[,c(11,13)])
 
-myres0 <- foreach(k = 1:10) %dorng%
-  {
-    currfold <- (vectf[k]:(vectf[k+1]-1))
-    X_train <- data.frame(X[-currfold,])
-    Z_train <- data.frame(Z[-currfold,])
-    Y_train <- data.frame(Y[-currfold,])
-
-    X_test <- data.frame(X[currfold,])
-    Z_test <- data.frame(Z[currfold,])
-    Y_test <- data.frame(Y[currfold,])
-
-    trtsgn_train <- trtsgn[-currfold]
-    trtsgn_test <- trtsgn[currfold]
-
-    modelpriors <- list()
-    modelpriors$hP0_m0 <- rep(0, ncol(Y_train)); modelpriors$hP0_nu0 <- .10
-    modelpriors$hP0_s0 <- ncol(Y_train) + 2; modelpriors$hP0_Lambda0 <- .10
-
-    #n_aux <- 5 # auxiliary variable for Neal's Algorithm 8
-    vec_par <- c(0.0, 1.0, .5, 1.0, 2.0, 2.0, 0.1)
-    #double m0=0.0, s20=10.0, v=.5, k0=1.0, nu0=2.0, n0 = 2.0;
-    iterations <- 12000
-    burnin <- 2000
-    thinning <- 5
-
-    nout <- (iterations-burnin)/thinning
-    predAPT <- c()
-
-    res0 <- tryCatch(expr = ppmxct(y = data.matrix(Y_train), X = data.frame(X_train),
-                                   Xpred = data.frame(X_test), Z = data.frame(Z_train),
-                                   Zpred = data.frame(Z_test), asstreat = trtsgn_train, #treatment,
-                                   PPMx = 1, cohesion = 2, kappa = c(1, 20, 10, 1), sigma = c(0.01, .59, 6),
-                                   similarity = 2, consim = 2, similparam = vec_par,
-                                   calibration = 2, coardegree = 2, modelpriors,
-                                   update_hierarchy = T,
-                                   hsp = F, iter = iterations, burn = burnin, thin = thinning,
-                                   mhtunepar = c(0.05, 0.05), CC = 5, reuse = 1,
-                                   nclu_init = 3), error = function(e){FALSE})
-    return(res0)
-  }
-
-save(myres0, file = "output/lgg-da/lgg10fDA_feb811.RData")
-#load("output/lgg-da/lgg10fDA_feb2.RData")
+#myres0 <- foreach(k = 1:10) %dorng%
+#  {
+#    currfold <- (vectf[k]:(vectf[k+1]-1))
+#    X_train <- data.frame(X[-currfold,])
+#    Z_train <- data.frame(Z[-currfold,])
+#    Y_train <- data.frame(Y[-currfold,])
+#
+#    X_test <- data.frame(X[currfold,])
+#    Z_test <- data.frame(Z[currfold,])
+#    Y_test <- data.frame(Y[currfold,])
+#
+#    trtsgn_train <- trtsgn[-currfold]
+#    trtsgn_test <- trtsgn[currfold]
+#
+#    modelpriors <- list()
+#    modelpriors$hP0_m0 <- rep(0, ncol(Y_train)); modelpriors$hP0_nu0 <- 10
+#    modelpriors$hP0_s0 <- ncol(Y_train) + 2; modelpriors$hP0_Lambda0 <- 10
+#
+#    #n_aux <- 5 # auxiliary variable for Neal's Algorithm 8
+#    vec_par <- c(0.0, 1.0, .5, 1.0, 2.0, 2.0, 0.1)
+#    #double m0=0.0, s20=10.0, v=.5, k0=1.0, nu0=2.0, n0 = 2.0;
+#    iterations <- 12000
+#    burnin <- 2000
+#    thinning <- 5
+#
+#    nout <- (iterations-burnin)/thinning
+#    predAPT <- c()
+#
+#    res0 <- tryCatch(expr = ppmxct(y = data.matrix(Y_train), X = data.frame(X_train),
+#                                   Xpred = data.frame(X_test), Z = data.frame(Z_train),
+#                                   Zpred = data.frame(Z_test), asstreat = trtsgn_train, #treatment,
+#                                   PPMx = 1, cohesion = 2, kappa = 1,
+#                                   similarity = 2, consim = 2, similparam = vec_par,
+#                                   calibration = 2, coardegree = 2, modelpriors = modelpriors,
+#                                   update_hierarchy = T,
+#                                   hsp = F, iter = iterations, burn = burnin, thin = thinning,
+#                                   mhtunepar = c(0.05, 0.05), CC = 5, reuse = 1,
+#                                   nclu_init = 3), error = function(e){FALSE})
+#    return(res0)
+#  }
+#
+#save(myres0, file = "output/lgg-da/lgg10fDA_feb9.RData")
+load("output/lgg-da/lgg10fDA_feb9.RData")
 
 for(k in 1:K){
   currfold <- (vectf[k]:(vectf[k+1]-1))
@@ -281,7 +281,7 @@ for(k in 1:10){
   kappa <- ggplot(df, aes(x=kappa, y=frequency/nout, fill = Treatment)) +
     geom_bar(stat = "identity", position = "dodge", width = 0.1) +
     ylab("proportion") + xlab(expression(kappa)) + ggtitle(paste0("Fold ", k)) +
-    ylim(0, .5)
+    ylim(0, .75)
   assign(paste("kp", k, sep=""), kappa)
   #ksp <- ggpubr::ggarrange(sigma, kappa, nrow=1, ncol = 2, legend = "none" )#,
   #                        #common.legend = TRUE, legend="bottom")
