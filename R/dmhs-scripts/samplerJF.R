@@ -7,7 +7,7 @@ library(doParallel)
 library(doRNG)
 
 #options(mc.cores = parallel::detectCores())
-registerDoParallel(cores = 10)
+registerDoParallel(cores = 50)
 rstan_options(auto_write = TRUE)
 
 loadRData <- function(fileName){
@@ -32,7 +32,7 @@ npc2 <- function(output, trtsgn, myoutot){
     for (j in 1:n) {
       mypre[j] <- mypreTall[j, trtsgn[j]]
     }
-    sts <- table(mypre, myoutot)
+    sts <- table(factor(mypre, levels = 1:3), factor(myoutot, levels = 1:3))
     mysdls <- as.numeric(rownames(sts))
     str1 <- matrix(0, nrow = 3, ncol = 3)
     str1[mysdls, ] <- sts
