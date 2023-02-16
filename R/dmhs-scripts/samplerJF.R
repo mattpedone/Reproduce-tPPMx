@@ -16,7 +16,7 @@ loadRData <- function(fileName){
   get(ls()[ls() != "fileName"])
 }
 
-simdata <- loadRData("data/scen3a.RData")
+simdata <- loadRData("data/scen1a.RData")
 
 npc2 <- function(output, trtsgn, myoutot){
   K <- dim(output)[3]
@@ -99,8 +99,8 @@ res <- foreach(k = 1:K) %dorng%
                     P = dim(X_train)[2], X = X_train, Xp = X_test, Y = Y_train,
                     sd_prior = 1.0, psi = .25)
 
-    fit <- rstan::stan(file = "R/dmhs-scripts/model.stan", data = ss_data, cores = 1, iter = 1500,
-                        chains = 1, verbose = T, warmup = 500, seed = 121,
+    fit <- rstan::stan(file = "R/dmhs-scripts/model.stan", data = ss_data, cores = 1, iter = 1000,
+                        chains = 1, verbose = T, warmup = 200, seed = 121,
                         control = list(max_treedepth = 15, adapt_delta = 0.995))#995))
 
 
@@ -164,4 +164,5 @@ NPC <- c(round(mean(PPMXCUT), 4), round(sd(PPMXCUT), 4))
 #results
 resDMHS <- rbind(MOT, MTUg, NPC)#, WAIC, lpml)
 colnames(resDMHS) <- c("mean", "sd")
-save(resDMHS, file="output/simulation-study/main/scen3b_dmhs_res.RData")
+resDMHS
+save(resDMHS, file="output/simulation-study/main/scen1a_dmhs_res.RData")
