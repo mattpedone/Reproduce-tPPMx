@@ -15,8 +15,8 @@ loadRData <- function(fileName){
 }
 #for(sc in 10:12){
 #sc <- 2
-  simdata <- loadRData(paste0("data/scen3b.RData"))
-  mypath <- c("output/simulation-study/main/scen3b_hc")
+  simdata <- loadRData(paste0("data/scen1a.RData"))
+  mypath <- c("output/simulation-study/main/scen1a_hc")
 ################################ Functions ########################################
 mymultt <- function(Xtrain, X.pred){
   myln <- length(Xtrain[,1])
@@ -151,7 +151,7 @@ HC.sum.all <- foreach(k = 1:K) %dorng%
     s_train_trt <- train_trt[-mysub]
 
     ### clustering using CONSENSUS MATRIX method ###################################
-    con_clu <- ConsensusClusterPlus(t(s_train_pred),maxK=15,reps=500,pItem=0.90,pFeature=1,
+    con_clu <- ConsensusClusterPlus(t(s_train_pred),maxK=15,pFeature=1,
                                     clusterAlg="hc",distance="pearson",
                                     #clusterAlg="km",distance="euclidean",
                                     #clusterAlg="pam",distance="manhattan",
@@ -242,7 +242,7 @@ countUT <- function(resultsum, myoutot){
     for(j in 1:length(trtsgn)){
       mypre[j] <- mypreTall[j, trtsgn[j]]
     }
-    sts <- table(mypre, myoutot)
+    sts <- table(factor(mypre, levels = 1:3), factor(myoutot+1, levels = 1:3))
     mysdls <- as.numeric(rownames(sts))
     str1 <- matrix(0, nrow = 3, ncol = 3)
     str1[mysdls,] <- sts
@@ -266,7 +266,7 @@ utpred1APT.all <- array(0, dim = c(n, 19, nrep))
 
 ### clustering using CONSENSUS MATRIX method ###################################
 
-rst.hc<-ConsensusClusterPlus(t(d),maxK=15,reps=500,pItem=0.90,pFeature=1,
+rst.hc<-ConsensusClusterPlus(t(d),maxK=15,pFeature=1,
                              clusterAlg="hc",distance="pearson",
                              #clusterAlg="km",distance="euclidean",
                              #clusterAlg="pam",distance="manhattan",
@@ -375,5 +375,6 @@ MOT <- c(mean(MOT), sd(MOT))
 MTUg <- c(mean(MTUg), sd(MTUg))
 NPC <- c(mean(NPC), sd(NPC))
 finres <- rbind(MOT, MTUg, NPC)
+finres
 save(finres, file=paste0(mypath, "_res.RData"))
 #}
