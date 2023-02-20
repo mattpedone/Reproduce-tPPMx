@@ -16,7 +16,7 @@ loadRData <- function(fileName){
   get(ls()[ls() != "fileName"])
 }
 
-simdata <- loadRData("data/scen1a.RData")
+simdata <- loadRData("data/scen1aL.RData")
 
 npc2 <- function(output, trtsgn, myoutot){
   K <- dim(output)[3]
@@ -165,4 +165,4 @@ NPC <- c(round(mean(PPMXCUT), 4), round(sd(PPMXCUT), 4))
 resDMHS <- rbind(MOT, MTUg, NPC)#, WAIC, lpml)
 colnames(resDMHS) <- c("mean", "sd")
 resDMHS
-save(resDMHS, file="output/simulation-study/main/scen1a_dmhs_res.RData")
+save(resDMHS, file="output/simulation-study/supp/scen1aL_dmhs_res.RData")

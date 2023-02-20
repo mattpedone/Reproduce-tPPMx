@@ -27,15 +27,16 @@ for (k in 1:K) {
   simdata[[k]] <- treatppmx::genmech_clu2(npred = 10)
 }
 
-myres0 <- foreach(k = 1:K) %dopar%
+myres0 <- foreach(k = 1:K) %dorng%
   {
-    pred_mis <- sample(1:10, 3)
+    pred_mis <- sample(1:10, 2)
     prog_mis <- sample(1:2, 1)
     X_train <- data.frame(cbind(simdata[[k]]$pred[1:170, -pred_mis], simdata[[k]]$prog[1:170, prog_mis]))
     Z_train <- data.frame(cbind(simdata[[k]]$prog[1:170, -prog_mis], simdata[[k]]$pred[1:170, pred_mis]))
     Y_train <- data.frame(simdata[[k]]$Y[1:170, ])
 
     X_test <- data.frame(simdata[[k]]$pred[171:200, -pred_mis], simdata[[k]]$prog[171:200, prog_mis])
+    colnames(X_test) <- c("X1", "X2", "X3", "X4", "X5", "X6", "X7", "X8", "X9")
     Z_test <- data.frame(cbind(simdata[[k]]$prog[171:200, -prog_mis], simdata[[k]]$pred[171:200, pred_mis]))
     Y_test <- data.frame(simdata[[k]]$Y[171:200, ])
 
@@ -58,8 +59,8 @@ myres0 <- foreach(k = 1:K) %dopar%
     res0 <-
       tryCatch(expr = ppmxct(y = data.matrix(Y_train), X = data.frame(X_train),
           Xpred = data.frame(X_test), Z = data.frame(Z_train), Zpred = data.frame(Z_test),
-          asstreat = trtsgn_train, PPMx = 0, cohesion = 2, kappa = 1, similarity = 2, consim = 2, similparam = vec_par,
-          calibration = 2, coardegree = 2, modelpriors, update_hierarchy = T, hsp = T,
+          asstreat = trtsgn_train, PPMx = 1, cohesion = 2, kappa = 1, similarity = 2, consim = 2, similparam = vec_par,
+          calibration = 2, coardegree = 2, modelpriors, update_hierarchy = F, hsp = T,
           iter = iterations, burn = burnin, thin = thinning, mhtunepar = c(0.05, 0.05),
           CC = 5, reuse = 1, nclu_init = 10), error = function(e) {FALSE})
     return(res0)
@@ -277,15 +278,16 @@ for (k in 1:K) {
   simdata[[k]] <- treatppmx::genmech_clu2(npred = 20)
 }
 
-myres0 <- foreach(k = 1:K) %dopar%
+myres0 <- foreach(k = 1:K) %dorng%
   {
-    pred_mis <- sample(1:20, 7)
+    pred_mis <- sample(1:20, 5)
     prog_mis <- sample(1:2, 1)
     X_train <- data.frame(cbind(simdata[[k]]$pred[1:170, -pred_mis], simdata[[k]]$prog[1:170, prog_mis]))
     Z_train <- data.frame(cbind(simdata[[k]]$prog[1:170, -prog_mis], simdata[[k]]$pred[1:170, pred_mis]))
     Y_train <- data.frame(simdata[[k]]$Y[1:170, ])
 
     X_test <- data.frame(simdata[[k]]$pred[171:200, -pred_mis], simdata[[k]]$prog[171:200, prog_mis])
+    colnames(X_test)[16] <- c("X16")
     Z_test <- data.frame(cbind(simdata[[k]]$prog[171:200, -prog_mis], simdata[[k]]$pred[171:200, pred_mis]))
     Y_test <- data.frame(simdata[[k]]$Y[171:200, ])
 
@@ -307,8 +309,8 @@ myres0 <- foreach(k = 1:K) %dopar%
 
     res0 <- tryCatch(expr = ppmxct(y = data.matrix(Y_train), X = data.frame(X_train),
           Xpred = data.frame(X_test), Z = data.frame(Z_train), Zpred = data.frame(Z_test),
-          asstreat = trtsgn_train, PPMx = 0, cohesion = 2, kappa = 1, similarity = 2, consim = 2, similparam = vec_par,
-          calibration = 2, coardegree = 2, modelpriors, update_hierarchy = T,
+          asstreat = trtsgn_train, PPMx = 1, cohesion = 2, kappa = 1, similarity = 2, consim = 2, similparam = vec_par,
+          calibration = 2, coardegree = 2, modelpriors, update_hierarchy = F,
           hsp = T, iter = iterations, burn = burnin, thin = thinning,
           mhtunepar = c(0.05, 0.05), CC = 5, reuse = 1, nclu_init = 10),
           error = function(e) {FALSE})
