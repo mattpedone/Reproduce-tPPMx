@@ -54,7 +54,7 @@ for(i in 1:nrow(Y)){
 
 table(matchRTComp[,9:10])
 vectf <- c(1, 17, 33, 49, 65, 81, 97, 113, 129, 145, 159)
-#load("/home/matt/Dropbox/PHD/study-treatppmx/output/lgg12aprs121.RData")
+
 nout <- 2000
 X <- scale(matchRTComp[,16:38])
 Z <- scale(matchRTComp[,c(11,13)])
@@ -184,6 +184,7 @@ mean1 <- ggplot(df, aes(x=variable, y=value, group=Group)) +
   ylim(-1.0, 1.0) +
   xlab("Predictive biomarkers") + ylab("Mean") +
   theme_classic() +
+  geom_hline(yintercept=0) +
   theme(axis.text.x=element_text(angle=45, hjust=1)) + ggtitle("Treatment 1")
 
 cls2 <- t(as.matrix(res0$label[[2]]))#[,c(1:num_treat[1])]
@@ -276,6 +277,7 @@ mean2 <- ggplot(df, aes(x=variable, y=value, group=Group)) +
   geom_point(aes(color=Group)) +
   scale_colour_manual(values=c(cols2)) +
   ylim(-1.0, 1.0) +
+  geom_hline(yintercept=0) +
   xlab("Predictive biomarkers") + ylab("Mean") +
   theme_classic() +
   theme(axis.text.x=element_text(angle=45, hjust=1)) + ggtitle("Treatment 2")
@@ -328,9 +330,9 @@ coocc_plot <- grid_arrange_shared_legend(c1, c2)#, nrow = 1, top = "Title of the
 var_arr_group <- grid.arrange(var1, var2, nrow = 1)#, top = "Title of the page")
 #ggsave(var_arr_group, device = "pdf", path = "figs", filename = "var_arr_group.pdf")
 mean_arr_group <- grid.arrange(mean1, mean2, nrow = 1)#, top = "Title of the page")
-#ggsave(mean_arr_group, device = "pdf", path = "figs", filename = "mean_arr_group.pdf")
+ggsave(mean_arr_group, device = "pdf", path = "figs", filename = "mean_arr_group.pdf")
 
-fix_clu <- cbind(labels1, labels2)
+#fix_clu <- cbind(labels1, labels2)
 
 iterations <- 12000
 burnin <- 2000
@@ -421,8 +423,11 @@ p26 <- ggtern(data=pi26, aes(x=PD, y=PS, z=CR)) +
 
 tern2 <- ggtern::grid.arrange(p21, p22, p23, p26, ncol = 4)
 
+tp <- ggtern::grid.arrange(tern1, tern2, nrow = 2)
+
 #ggsave(tern1, device = "pdf", path = "figs", filename = "tern1.pdf")
 #ggsave(tern2, device = "pdf", path = "figs", filename = "tern2.pdf")
 
+#ggsave(tp, device = "pdf", path = "figs", filename = "tp.pdf")
 
 
