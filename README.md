@@ -15,9 +15,6 @@ The project is structured as follows:
 └── README.md
 ```
 
-Reproduction of Results in [Paper Title]
-This repository contains an R project that is used to reproduce the results in [Paper Title].
-
 To reproduce the results in the paper, please follow the steps below:
 
 * Clone this repository to your local machine.
