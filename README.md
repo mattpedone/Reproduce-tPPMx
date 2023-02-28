@@ -19,8 +19,8 @@ To reproduce the results in the paper, please follow the steps below:
 
 * Clone this repository to your local machine.
 * Install the necessary R packages listed in `code_requirements.R`.
-* Open `code_requirements.R` in RStudio or your preferred R IDE.
 * Set the working directory to the root of the project.
 * Run the R script.
 
+Note that each folder in this repository contains a `Readme.md` file to describe the purpose and the elements in the folder.
 Please note that reproducing the results may require a significant amount of computational resources, and may take several hours to complete. 
