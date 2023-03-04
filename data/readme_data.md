@@ -1,4 +1,4 @@
-# info-data
+# `data` folder
 
 ## Scenarios - Train-Test 
 
