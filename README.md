@@ -22,4 +22,4 @@ To reproduce the results in the paper, please follow the steps below:
 -   Set the working directory to the root of the project.
 -   Run the R script.
 
-Note that each folder in this repository contains a `Readme.md` file to describe the purpose and the elements in the folder. Please note that the amount of computational resources needed and the time required to reproduce the results may vary depending on the specific machine being used. 
+Note that each folder in this repository contains a readme file to describe the purpose and the elements in the folder. Please note that the amount of computational resources needed and the time required to reproduce the results may vary depending on the specific machine being used. 
