@@ -48,7 +48,7 @@ predAPT_all <- array(0, dim = c(npat_pred, 9, K))
 nclust_all <- matrix(0, nrow = K, ncol = 6)
 gof_all <- matrix(0, nrow = K, ncol = 2)
 
-cor_all <- 10#parallel::detectCores()-1#cores to be allocated
+cor_all <- 50#parallel::detectCores()-1#cores to be allocated
 registerDoParallel(cores = cor_all)
 
 myres0 <- foreach(k = 1:K) %dorng%
