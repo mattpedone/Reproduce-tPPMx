@@ -65,8 +65,8 @@ myres0 <- foreach(k = 1:K) %dorng%
     trtsgn_test <- simdata$trtsgn[[k]][125:152]
 
     modelpriors <- list()
-    modelpriors$hP0_m0 <- rep(0, ncol(Y_train)); modelpriors$hP0_nu0 <- .1
-    modelpriors$hP0_s0 <- ncol(Y_train) + 2; modelpriors$hP0_Lambda0 <- .1
+    modelpriors$hP0_m0 <- rep(0, ncol(Y_train)); modelpriors$hP0_nu0 <- 10.0
+    modelpriors$hP0_s0 <- ncol(Y_train) + 2; modelpriors$hP0_Lambda0 <- 10.0
 
     vec_par <- c(0.0, 1.0, .5, 1.0, 2.0, 2.0, 0.1)
     #double m0=0.0, s20=10.0, v=.5, k0=1.0, nu0=2.0, n0 = 2.0;
