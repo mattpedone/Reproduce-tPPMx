@@ -1,8 +1,8 @@
 # Reproduce-tPPMx
 
-## Reproduction of Results in "A Bayesian nonparametric approach to personalized treatment selection"
+## Reproduction of Results in "Personalized Treatment Selection via Product Partition Models with Covariates"
 
-This repository contains an R project that is used to reproduce the results in "A Bayesian nonparametric approach to personalized treatment selection".
+This repository contains an R project that is used to reproduce the results in "Personalized Treatment Selection via Product Partition Models with Covariates" by Pedone, Argiento, Stingo.
 
 The project is structured as follows:
 
