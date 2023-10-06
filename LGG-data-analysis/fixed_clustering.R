@@ -330,7 +330,7 @@ coocc_plot <- grid_arrange_shared_legend(c1, c2)#, nrow = 1, top = "Title of the
 var_arr_group <- grid.arrange(var1, var2, nrow = 1)#, top = "Title of the page")
 #ggsave(var_arr_group, device = "pdf", path = "figs", filename = "var_arr_group.pdf")
 mean_arr_group <- grid.arrange(mean1, mean2, nrow = 1)#, top = "Title of the page")
-ggsave(mean_arr_group, device = "pdf", path = "figs", filename = "mean_arr_group.pdf")
+ggsave(mean_arr_group, device = "pdf", path = "figs", filename = "mean_arr_group_rev.pdf")
 
 #fix_clu <- cbind(labels1, labels2)
 
